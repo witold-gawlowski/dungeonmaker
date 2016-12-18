@@ -289,7 +289,7 @@ class dungeon_generator:
              #((38,8,0), (2,4)),
              #((-34,28,0), (2,4))]
 
-    #shape = [((0,0,0), (3,2))]
+    shape = [((0,0,0), (1,1))]
     shape = self.snap_room_center(shape, tileSize)
 
     pos = (0,-2,0)
