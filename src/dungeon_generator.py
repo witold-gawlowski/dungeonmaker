@@ -15,6 +15,9 @@ def tolist(x):
 def tovec3(x):
   return fbx.FbxDouble3(x[0], x[1], x[2], x[3])
 
+def round3(x):
+  return (round(x[0]), round(x[1]), round(x[2]))
+
 def add3(x, y):
   return [x[i]+y[i] for i in range(3)]
 
@@ -237,6 +240,19 @@ class dungeon_generator:
       num_tiles += 1
 
 
+  def snap_room_center(self, shape, scale):
+    for i in range(len(shape)):
+      (roomCenter, size) = shape[i]
+      if not roomCenter[0] % scale == 0:
+        roomCenter = (roomCenter[0] - (roomCenter[0] % scale), roomCenter[1], roomCenter[2])
+      if not roomCenter[1] % scale == 0:
+        roomCenter = (roomCenter[0], roomCenter[1] - (roomCenter[1] % scale), roomCenter[2])
+      if size[0] % 2 == 0:
+        roomCenter = (roomCenter[0]+(scale*0.5), roomCenter[1], roomCenter[2])
+      if size[1] % 2 == 0:
+        roomCenter = (roomCenter[0], roomCenter[1]+(scale*0.5), roomCenter[2])
+      shape[i] = (roomCenter, size)
+    return shape
 
   def get_incoming_tile_index(self, incoming, name):
     for i in range(len(incoming)):
@@ -248,7 +264,7 @@ class dungeon_generator:
   def in_room_range(self, shape, pos, scale):
     for square in shape:
       (roomCenter, size) = square
-      if ((pos[0] <= roomCenter[0]+(scale*size[0]/2) and pos[0] >= roomCenter[0]-(scale*size[0]/2)) and (pos[1] <= roomCenter[1]+(scale*size[1]/2) and pos[1] >= roomCenter[1]-(scale*size[1]/2))):
+      if ((pos[0] <= roomCenter[0]+(scale*size[0]*0.5) and pos[0] >= roomCenter[0]-(scale*size[0]*0.5)) and (pos[1] <= roomCenter[1]+(scale*size[1]*0.5) and pos[1] >= roomCenter[1]-(scale*size[1]*0.5))):
         return True 
     return False
 
@@ -262,10 +278,10 @@ class dungeon_generator:
       tile_meshes[name].SetName(name)
 
     tileSize = 4;
-    shape = [((2,-8,0), (4,4)),
-             ((2,28,0), (20,15)),
-             ((2,70,0), (8,8)),
-             ((2,28,0), (24,6))]
+    #shape = [((2,-8,0), (5,5)),
+    #         ((2,28,0), (20,15)),
+    #         ((2,70,0), (8,8)),
+    #         ((2,28,0), (24,6))]
 
     #shape = [((2,0,0), (20,1)),
              #((2,20,0), (20,1)),
@@ -273,8 +289,13 @@ class dungeon_generator:
              #((38,8,0), (2,4)),
              #((-34,28,0), (2,4))]
 
+    #shape = [((0,0,0), (3,2))]
+    shape = self.snap_room_center(shape, tileSize)
+
+    pos = (0,-2,0)
+    print(pos)
     edges = {}
-    pos = (2,0,0)
+    
     angle = 0
 
     # create an unsatisfied edge
@@ -289,27 +310,33 @@ class dungeon_generator:
     # It generates the room by checking how far 
     while len(todo) and num_tiles < 10000:
       pos, angle, out_feature_name, in_feature_name = todo.pop()
-
-      if (not self.in_room_range(shape, xy_location(pos), tileSize)):
+      #if (not self.in_room_range(shape, xy_location(pos), tileSize)):
         #print(xy_location(pos))
-        continue
+        #continue
       # incoming features are indexed on the feature name
       incoming = self.incoming[out_feature_name]
         
       #print(incoming[0][0])
       in_sel = int(self.get_incoming_tile_index(incoming, "Floor_2x2"))
 
+      in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
+      new_angle = lim360(angle - in_rot[2])
+      tile_pos = round3(add3(pos, rotateZ(neg3(in_trans), new_angle)))
+      tile_name = in_tile_name
+
+      if (not self.in_room_range(shape, xy_location(tile_pos), tileSize)):
+        #print(xy_location(pos))
+        continue
+
       if self.try_tile(new_scene, todo, edges, pos, angle, incoming, in_sel):
-        in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
-        new_angle = lim360(angle - in_rot[2])
-        tile_pos = add3(pos, rotateZ(neg3(in_trans), new_angle))
-        tile_name = in_tile_name
+        #print(roomCenter, size)
+        #print(xy_location(tile_pos),tileSize)
         nodes.append((tile_name, tile_pos, new_angle))
 
       num_tiles += 1
 
     print("Floor Complete!")
-    print("Number of Edges", len(edges))
+    #print("Number of Edges", len(edges))
 
 
     print("Making walls...")
@@ -342,7 +369,7 @@ class dungeon_generator:
       if self.try_tile(new_scene, todo, edges, pos, angle, incoming, in_sel):
         in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
         new_angle = lim360(angle - in_rot[2])
-        tile_pos = add3(pos, rotateZ(neg3(in_trans), new_angle))
+        tile_pos = round3(add3(pos, rotateZ(neg3(in_trans), new_angle)))
         tile_name = in_tile_name
         nodes.append((tile_name, tile_pos, new_angle))
           
@@ -376,7 +403,7 @@ class dungeon_generator:
         if self.try_tile(new_scene, todo, edges, pos, angle, incoming, in_sel):
           in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
           new_angle = lim360(angle - in_rot[2])
-          tile_pos = add3(pos, rotateZ(neg3(in_trans), new_angle))
+          tile_pos = round3(add3(pos, rotateZ(neg3(in_trans), new_angle)))
           tile_name = in_tile_name
           nodes.append((tile_name, tile_pos, new_angle))
           break
