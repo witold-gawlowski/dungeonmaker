@@ -56,7 +56,7 @@ class dungeon_generator:
 
   def read_components(self):
     importer = fbx.FbxImporter.Create(self.sdk_manager, "")    
-    result = importer.Initialize("scenes/components4.fbx", -1, self.io_settings)
+    result = importer.Initialize("scenes/components6.fbx", -1, self.io_settings)
     if not result:
       raise BaseException("could not find components file")
     self.components = fbx.FbxScene.Create(self.sdk_manager, "")
@@ -126,7 +126,7 @@ class dungeon_generator:
 
     new_scene = fbx.FbxScene.Create(self.sdk_manager, "result");
     #self.create_dungeon(new_scene, "flat")
-    self.create_room(new_scene, "flat")
+    self.create_room(new_scene, "Floor_Flat")
 
     exporter = fbx.FbxExporter.Create(self.sdk_manager, "")
     
@@ -165,8 +165,8 @@ class dungeon_generator:
     for out_sel in range(len(outgoing)):
       out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
       new_pos = add3(tile_pos, rotateZ(out_trans, new_angle))
-      if xy_location(new_pos) in edges:
-        edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[xy_location(new_pos)]
+      if round3(new_pos) in edges:
+        edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[round3(new_pos)]
         #print("check", new_pos, edge_pos, out_feature_name, edge_feature_name, edge_satisfied)
         if edge_satisfied:
           return False
@@ -177,28 +177,35 @@ class dungeon_generator:
           return False
         
         # Check to see that the feature types match up "flat = flat" also check for the exception where "step_up" must match to "step_down"
-        if out_feature_name == "step_down" or out_feature_name == "step_up":
-          if (out_feature_name == "step_down" and edge_feature_name != "step_up"):
-            return False
-          elif (out_feature_name == "step_up" and edge_feature_name != "step_down"):
-            return False
-        elif not edge_feature_name == out_feature_name:
+
+        if (out_feature_name == "step_down" and edge_feature_name != "step_up"):
           return False
+        elif (out_feature_name == "step_up" and edge_feature_name != "step_down"):
+          return False
+        elif (out_feature_name == "Ceiling_Flat" and not (edge_feature_name == "Ceiling_Flat" or edge_feature_name == "Floor_Flat")):
+          return False
+        elif (out_feature_name == "Floor_Flat" and not (edge_feature_name == "Floor_Flat" or edge_feature_name == "Ceiling_Flat")):
+          return False
+
+        if edge_feature_name != out_feature_name:
+          return False
+          
+          
 
     # add all outgoing edges to the todo list and mark edges
     # note: if there were multiple outgoing edge choices, we would have to select them.
     for out_sel in range(len(outgoing)):
       out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
       new_pos = add3(tile_pos, rotateZ(out_trans, new_angle))
-      if not xy_location(new_pos) in edges:
+      if not round3(new_pos) in edges:
         # make an unsatisfied edge
         edge = (new_pos, lim360(new_angle + out_rot[2]), out_feature_name, None)
-        edges[xy_location(new_pos)] = edge
+        edges[round3(new_pos)] = edge
         todo.append(edge)
         #print(edge)
       else:
-        edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[xy_location(new_pos)]
-        edges[xy_location(new_pos)] = (edge_pos, edge_angle, edge_feature_name, out_feature_name)
+        edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[round3(new_pos)]
+        edges[round3(new_pos)] = (edge_pos, edge_angle, edge_feature_name, out_feature_name)
 
     #self.make_node(new_scene, tile_name, tile_pos, new_angle)
     #print("pass")
@@ -278,10 +285,10 @@ class dungeon_generator:
       tile_meshes[name].SetName(name)
 
     tileSize = 4;
-    #shape = [((2,-8,0), (5,5)),
-    #         ((2,28,0), (20,15)),
-    #         ((2,70,0), (8,8)),
-    #         ((2,28,0), (24,6))]
+    shape = [((2,-8,0), (4,4)),
+             ((2,28,0), (20,15)),
+             ((2,70,0), (8,8)),
+             ((2,28,0), (24,6))]
 
     #shape = [((2,0,0), (20,1)),
              #((2,20,0), (20,1)),
@@ -289,11 +296,10 @@ class dungeon_generator:
              #((38,8,0), (2,4)),
              #((-34,28,0), (2,4))]
 
-    #shape = [((0,0,0), (3,2))]
+    #shape = [((0,0,0), (4,3))]
     shape = self.snap_room_center(shape, tileSize)
 
     pos = (0,-2,0)
-    print(pos)
     edges = {}
     
     angle = 0
@@ -301,7 +307,6 @@ class dungeon_generator:
     # create an unsatisfied edge
     todo = [(pos, angle, feature_name, False)]
     num_tiles = 0
-    random.seed(30)
 
     nodes = []
 
@@ -348,10 +353,10 @@ class dungeon_generator:
       for out_sel in range(len(outgoing)):
         out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
         new_pos = add3(tile_pos, rotateZ(out_trans, new_angle))
-        if xy_location(new_pos) in edges:
-          edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[xy_location(new_pos)]
+        if round3(new_pos) in edges:
+          edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[round3(new_pos)]
           if not edge_satisfied:
-            todo.append(edges[xy_location(new_pos)])
+            todo.append(edges[round3(new_pos)])
           
     print("Todo length: ", len(todo))
 
@@ -364,7 +369,7 @@ class dungeon_generator:
     while len(unsatisfiedWalls):
       pos, angle, out_feature_name, in_feature_name = unsatisfiedWalls.pop()
       incoming = self.incoming[out_feature_name]
-      in_sel = int(self.get_incoming_tile_index(incoming, "Wall_01"))
+      in_sel = int(self.get_incoming_tile_index(incoming, "Floor_Wall_4x4x4"))
 
       if self.try_tile(new_scene, todo, edges, pos, angle, incoming, in_sel):
         in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
@@ -383,10 +388,10 @@ class dungeon_generator:
       for out_sel in range(len(outgoing)):
         out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
         new_pos = add3(tile_pos, rotateZ(out_trans, new_angle))
-        if xy_location(new_pos) in edges:
-          edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[xy_location(new_pos)]
-          if not edge_satisfied and edge_feature_name == "wallend":
-            todo.append(edges[xy_location(new_pos)])
+        if round3(new_pos) in edges:
+          edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[round3(new_pos)]
+          if not edge_satisfied and edge_feature_name == "Floor_Wall_End":
+            todo.append(edges[round3(new_pos)])
           
     print("Todo length: ", len(todo))
 
@@ -397,18 +402,98 @@ class dungeon_generator:
     while len(unsatisfiedCorners):
       pos, angle, out_feature_name, in_feature_name = unsatisfiedCorners.pop()
       incoming = self.incoming[out_feature_name]
-      for i in range(len(incoming)):
-        in_sel = int(i)
+      in_sel = int(self.get_incoming_tile_index(incoming, "Floor_Wall_L_4x4x4"))
 
-        if self.try_tile(new_scene, todo, edges, pos, angle, incoming, in_sel):
-          in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
-          new_angle = lim360(angle - in_rot[2])
-          tile_pos = round3(add3(pos, rotateZ(neg3(in_trans), new_angle)))
-          tile_name = in_tile_name
-          nodes.append((tile_name, tile_pos, new_angle))
-          break
+      if self.try_tile(new_scene, todo, edges, pos, angle, incoming, in_sel):
+        in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
+        new_angle = lim360(angle - in_rot[2])
+        tile_pos = round3(add3(pos, rotateZ(neg3(in_trans), new_angle)))
+        tile_name = in_tile_name
+        nodes.append((tile_name, tile_pos, new_angle))
 
     print("Corners Complete!")
+    
+    print("Making Ceiling...")
+    pos = (0,-2,8)
+    edges = {}
+    
+    angle = 0
+
+    todo = [(pos, angle, "Floor_Flat", False)]
+    num_tiles = 0
+
+    ceilingNodes = []
+
+    # this loop processes one edge from the todo list.
+    # It generates the room by checking how far 
+    while len(todo):
+      pos, angle, out_feature_name, in_feature_name = todo.pop()
+      #if (not self.in_room_range(shape, xy_location(pos), tileSize)):
+        #print(xy_location(pos))
+        #continue
+      # incoming features are indexed on the feature name
+      incoming = self.incoming[out_feature_name]
+        
+      #print(incoming[0][0])
+      in_sel = int(self.get_incoming_tile_index(incoming, "Floor_2x2"))
+
+      in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
+      new_angle = lim360(angle - in_rot[2])
+      tile_pos = round3(add3(pos, rotateZ(neg3(in_trans), new_angle)))
+      tile_name = in_tile_name
+
+      if (not self.in_room_range(shape, xy_location(tile_pos), tileSize)):
+        #print(xy_location(pos))
+        continue
+
+      if self.try_tile(new_scene, todo, edges, pos, angle, incoming, in_sel):
+        #print(roomCenter, size)
+        #print(xy_location(tile_pos),tileSize)
+        ceilingNodes.append((tile_name, tile_pos, new_angle))
+
+      num_tiles += 1
+    
+
+
+    todo = []
+    for node in ceilingNodes:
+      (tile_name, tile_pos, new_angle) = node
+      outgoing = self.outgoing[tile_name]
+      for out_sel in range(len(outgoing)):
+        out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
+        new_pos = add3(tile_pos, rotateZ(out_trans, new_angle))
+        if round3(new_pos) in edges:
+          edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[round3(new_pos)]
+          if not edge_satisfied:
+            todo.append(edges[round3(new_pos)])
+          
+    print("Todo length: ", len(todo))
+
+    # Make a copy of the todo list <-- these current entries are guarantied to be walls
+    # Todo will change as we create the wall tiles so we need to make a copy of this wall list
+    unsatisfiedWalls = []
+    for wall in todo:
+      unsatisfiedWalls.append(wall)
+
+    while len(unsatisfiedWalls):
+      pos, angle, out_feature_name, in_feature_name = unsatisfiedWalls.pop()
+      incoming = self.incoming["Ceiling_Flat"]
+      in_sel = int(self.get_incoming_tile_index(incoming, "Ceiling_Wall_4x4x4"))
+
+      if self.try_tile(new_scene, todo, edges, pos, angle, incoming, in_sel):
+        in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
+        new_angle = lim360(angle - in_rot[2])
+        tile_pos = round3(add3(pos, rotateZ(neg3(in_trans), new_angle)))
+        tile_name = in_tile_name
+        ceilingNodes.append((tile_name, tile_pos, new_angle))
+
+    
+    print("Ceiling Complete!")
+
+    # create an unsatisfied edge
+
+    for node in ceilingNodes:
+      nodes.append(node)
 
     print("Total Nodes: ", len(nodes))
     # This takes all the nodes and sends them to the FXB output.
