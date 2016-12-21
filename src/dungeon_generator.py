@@ -7,6 +7,8 @@ import random
 # into this directory
 import fbx
 
+import tile_filter
+
 # FbxDouble3 unpacker
 def tolist(x):
   return [x[i] for i in range(3)]
@@ -53,6 +55,8 @@ class dungeon_generator:
     
     self.io_settings = fbx.FbxIOSettings.Create(self.sdk_manager, fbx.IOSROOT)
     self.sdk_manager.SetIOSettings(self.io_settings)
+
+    self.tile_filter = tile_filter.tile_filter()
 
   def read_components(self):
     importer = fbx.FbxImporter.Create(self.sdk_manager, "")    
@@ -110,6 +114,7 @@ class dungeon_generator:
     # tiles indexes the tiles by name.
     #print("self.incoming:", self.incoming)
     #print("\n self.outgoing:", self.outgoing)
+
 
   def get_format(self, name):
     reg = self.sdk_manager.GetIOPluginRegistry()
@@ -178,17 +183,22 @@ class dungeon_generator:
         
         # Check to see that the feature types match up "flat = flat" also check for the exception where "step_up" must match to "step_down"
 
-        if (out_feature_name == "step_down" and edge_feature_name != "step_up"):
-          return False
-        elif (out_feature_name == "step_up" and edge_feature_name != "step_down"):
-          return False
-        elif (out_feature_name == "Ceiling_Flat" and not (edge_feature_name == "Ceiling_Flat" or edge_feature_name == "Floor_Flat")):
-          return False
-        elif (out_feature_name == "Floor_Flat" and not (edge_feature_name == "Floor_Flat" or edge_feature_name == "Ceiling_Flat")):
-          return False
+        if not self.tile_filter.is_in_whitelist(out_feature_name,edge_feature_name):
+          if self.tile_filter.is_in_blacklist(out_feature_name,edge_feature_name):
+            return False
+          if edge_feature_name != out_feature_name:
+            return False
 
-        if edge_feature_name != out_feature_name:
-          return False
+        #if (out_feature_name == "step_down" and edge_feature_name != "step_up"):
+        #  return False
+        #elif (out_feature_name == "step_up" and edge_feature_name != "step_down"):
+        #  return False
+        #elif (out_feature_name == "Ceiling_Flat" and not (edge_feature_name == "Ceiling_Flat" or edge_feature_name == "Floor_Flat")):
+        #  return False
+        #elif (out_feature_name == "Floor_Flat" and not (edge_feature_name == "Floor_Flat" or edge_feature_name == "Ceiling_Flat")):
+        #  return False
+
+        
           
           
 
@@ -295,7 +305,6 @@ class dungeon_generator:
              #((2,40,0), (20,1)),
              #((38,8,0), (2,4)),
              #((-34,28,0), (2,4))]
-
     #shape = [((0,0,0), (4,3))]
     shape = self.snap_room_center(shape, tileSize)
 
