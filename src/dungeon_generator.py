@@ -278,12 +278,55 @@ class dungeon_generator:
 
     return None
 
-  def in_room_range(self, shape, pos, scale):
+  def in_shape_range(self, shape, pos, scale):
     for square in shape:
       (roomCenter, size) = square
       if ((pos[0] <= roomCenter[0]+(scale*size[0]*0.5) and pos[0] >= roomCenter[0]-(scale*size[0]*0.5)) and (pos[1] <= roomCenter[1]+(scale*size[1]*0.5) and pos[1] >= roomCenter[1]-(scale*size[1]*0.5))):
         return True 
     return False
+
+  def create_todo(self, edges, nodes, feature_names = None):
+    todo = []
+    for node in nodes:
+      (tile_name, tile_pos, new_angle) = node
+      outgoing = self.outgoing[tile_name]
+      for out_sel in range(len(outgoing)):
+        out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
+        new_pos = add3(tile_pos, rotateZ(out_trans, new_angle))
+        if round3(new_pos) in edges:
+          edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[round3(new_pos)]
+          if not edge_satisfied:
+            if feature_names is None:
+              todo.append(edges[round3(new_pos)])
+            else:
+              for name in feature_names:
+                if name == edge_feature_name:
+                  todo.append(edges[round3(new_pos)])
+    return todo
+
+  def complete_todo(self, new_scene, todo, edges, nodes, boundary = None, tile_name = None, flood_fill = False):
+    if flood_fill and boundary is None:
+      raise ValueError("You can't flood fill without a boundary! boundary is ", boundary, " and flood_fill is ", flood_fill)
+
+    junk = []
+    while len(todo):
+      pos, angle, out_feature_name, in_feature_name = todo.pop()
+      incoming = self.incoming[out_feature_name]
+      in_sel = int(self.get_incoming_tile_index(incoming, tile_name))
+
+      in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
+      new_angle = lim360(angle - in_rot[2])
+      tile_pos = round3(add3(pos, rotateZ(neg3(in_trans), new_angle)))
+      tile_name = in_tile_name
+
+      if not boundary is None:
+        if not self.in_shape_range(boundary, xy_location(tile_pos), 4):
+          continue
+
+      if self.try_tile(new_scene, (todo if flood_fill else junk), edges, pos, angle, incoming, in_sel):
+        nodes.append((tile_name, tile_pos, new_angle))
+
+    return nodes
 
   def create_room(self, new_scene, feature_name):
     # clone the tile meshes and name them after their original nodes.
@@ -294,25 +337,24 @@ class dungeon_generator:
       tile_meshes[name] = tile_mesh.Clone(fbx.FbxObject.eDeepClone, None)
       tile_meshes[name].SetName(name)
 
-    tileSize = 4;
+    tile_size = 4;
     shape = [((2,-8,0), (4,4)),
              ((2,28,0), (20,15)),
              ((2,70,0), (8,8)),
              ((2,28,0), (24,6))]
 
     #shape = [((2,0,0), (20,1)),
-             #((2,20,0), (20,1)),
-             #((2,40,0), (20,1)),
-             #((38,8,0), (2,4)),
-             #((-34,28,0), (2,4))]
+    #         ((2,20,0), (20,1)),
+    #         ((2,40,0), (20,1)),
+    #         ((38,8,0), (2,4)),
+    #         ((-34,28,0), (2,4))]
+
     #shape = [((0,0,0), (4,3))]
-    shape = self.snap_room_center(shape, tileSize)
+    shape = self.snap_room_center(shape, tile_size)
 
     pos = (0,-2,0)
     edges = {}
-    
     angle = 0
-
     # create an unsatisfied edge
     todo = [(pos, angle, feature_name, False)]
     num_tiles = 0
@@ -320,187 +362,55 @@ class dungeon_generator:
     nodes = []
 
     print("Making floor...")
-    # this loop processes one edge from the todo list.
-    # It generates the room by checking how far 
-    while len(todo) and num_tiles < 10000:
-      pos, angle, out_feature_name, in_feature_name = todo.pop()
-      #if (not self.in_room_range(shape, xy_location(pos), tileSize)):
-        #print(xy_location(pos))
-        #continue
-      # incoming features are indexed on the feature name
-      incoming = self.incoming[out_feature_name]
-        
-      #print(incoming[0][0])
-      in_sel = int(self.get_incoming_tile_index(incoming, "Floor_2x2"))
 
-      in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
-      new_angle = lim360(angle - in_rot[2])
-      tile_pos = round3(add3(pos, rotateZ(neg3(in_trans), new_angle)))
-      tile_name = in_tile_name
-
-      if (not self.in_room_range(shape, xy_location(tile_pos), tileSize)):
-        #print(xy_location(pos))
-        continue
-
-      if self.try_tile(new_scene, todo, edges, pos, angle, incoming, in_sel):
-        #print(roomCenter, size)
-        #print(xy_location(tile_pos),tileSize)
-        nodes.append((tile_name, tile_pos, new_angle))
-
-      num_tiles += 1
+    nodes = self.complete_todo(new_scene, todo, edges, nodes, shape, "Floor_2x2", True)
 
     print("Floor Complete!")
-    #print("Number of Edges", len(edges))
 
 
     print("Making walls...")
-    # Cleaning to todo list to have only wall tile tasks.
-    todo = []
-    for node in nodes:
-      (tile_name, tile_pos, new_angle) = node
-      outgoing = self.outgoing[tile_name]
-      for out_sel in range(len(outgoing)):
-        out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
-        new_pos = add3(tile_pos, rotateZ(out_trans, new_angle))
-        if round3(new_pos) in edges:
-          edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[round3(new_pos)]
-          if not edge_satisfied:
-            todo.append(edges[round3(new_pos)])
-          
+    todo = self.create_todo(edges, nodes)
     print("Todo length: ", len(todo))
 
-    # Make a copy of the todo list <-- these current entries are guarantied to be walls
-    # Todo will change as we create the wall tiles so we need to make a copy of this wall list
-    unsatisfiedWalls = []
-    for wall in todo:
-      unsatisfiedWalls.append(wall)
-
-    while len(unsatisfiedWalls):
-      pos, angle, out_feature_name, in_feature_name = unsatisfiedWalls.pop()
-      incoming = self.incoming[out_feature_name]
-      in_sel = int(self.get_incoming_tile_index(incoming, "Floor_Wall_4x4x4"))
-
-      if self.try_tile(new_scene, todo, edges, pos, angle, incoming, in_sel):
-        in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
-        new_angle = lim360(angle - in_rot[2])
-        tile_pos = round3(add3(pos, rotateZ(neg3(in_trans), new_angle)))
-        tile_name = in_tile_name
-        nodes.append((tile_name, tile_pos, new_angle))
-          
+    nodes = self.complete_todo(new_scene, todo, edges, nodes, None, "Floor_Wall_4x4x4", False)      
     print("Walls Complete!")
 
     print("Making Corners...")
-    todo = []
-    for node in nodes:
-      (tile_name, tile_pos, new_angle) = node
-      outgoing = self.outgoing[tile_name]
-      for out_sel in range(len(outgoing)):
-        out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
-        new_pos = add3(tile_pos, rotateZ(out_trans, new_angle))
-        if round3(new_pos) in edges:
-          edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[round3(new_pos)]
-          if not edge_satisfied and edge_feature_name == "Floor_Wall_End":
-            todo.append(edges[round3(new_pos)])
-          
+    todo = self.create_todo(edges, nodes, ["Floor_Wall_End"])
     print("Todo length: ", len(todo))
-
-    unsatisfiedCorners = []
-    for corner in todo:
-      unsatisfiedCorners.append(corner)
-
-    while len(unsatisfiedCorners):
-      pos, angle, out_feature_name, in_feature_name = unsatisfiedCorners.pop()
-      incoming = self.incoming[out_feature_name]
-      in_sel = int(self.get_incoming_tile_index(incoming, "Floor_Wall_L_4x4x4"))
-
-      if self.try_tile(new_scene, todo, edges, pos, angle, incoming, in_sel):
-        in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
-        new_angle = lim360(angle - in_rot[2])
-        tile_pos = round3(add3(pos, rotateZ(neg3(in_trans), new_angle)))
-        tile_name = in_tile_name
-        nodes.append((tile_name, tile_pos, new_angle))
-
+    nodes = self.complete_todo(new_scene, todo, edges, nodes, None, "Floor_Wall_L_4x4x4", False)
     print("Corners Complete!")
     
     print("Making Ceiling...")
     pos = (0,-2,8)
     edges = {}
-    
     angle = 0
-
     todo = [(pos, angle, "Floor_Flat", False)]
     num_tiles = 0
-
     ceilingNodes = []
 
-    # this loop processes one edge from the todo list.
-    # It generates the room by checking how far 
-    while len(todo):
-      pos, angle, out_feature_name, in_feature_name = todo.pop()
-      #if (not self.in_room_range(shape, xy_location(pos), tileSize)):
-        #print(xy_location(pos))
-        #continue
-      # incoming features are indexed on the feature name
-      incoming = self.incoming[out_feature_name]
-        
-      #print(incoming[0][0])
-      in_sel = int(self.get_incoming_tile_index(incoming, "Floor_2x2"))
-
-      in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
-      new_angle = lim360(angle - in_rot[2])
-      tile_pos = round3(add3(pos, rotateZ(neg3(in_trans), new_angle)))
-      tile_name = in_tile_name
-
-      if (not self.in_room_range(shape, xy_location(tile_pos), tileSize)):
-        #print(xy_location(pos))
-        continue
-
-      if self.try_tile(new_scene, todo, edges, pos, angle, incoming, in_sel):
-        #print(roomCenter, size)
-        #print(xy_location(tile_pos),tileSize)
-        ceilingNodes.append((tile_name, tile_pos, new_angle))
-
-      num_tiles += 1
+    ceilingNodes = self.complete_todo(new_scene, todo, edges, ceilingNodes, shape, "Floor_2x2", True)
     
-
-
-    todo = []
-    for node in ceilingNodes:
-      (tile_name, tile_pos, new_angle) = node
-      outgoing = self.outgoing[tile_name]
-      for out_sel in range(len(outgoing)):
-        out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
-        new_pos = add3(tile_pos, rotateZ(out_trans, new_angle))
-        if round3(new_pos) in edges:
-          edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[round3(new_pos)]
-          if not edge_satisfied:
-            todo.append(edges[round3(new_pos)])
+    todo = self.create_todo(edges, nodes)
           
     print("Todo length: ", len(todo))
 
-    # Make a copy of the todo list <-- these current entries are guarantied to be walls
-    # Todo will change as we create the wall tiles so we need to make a copy of this wall list
-    unsatisfiedWalls = []
-    for wall in todo:
-      unsatisfiedWalls.append(wall)
+    #while len(unsatisfiedWalls):
+    #  pos, angle, out_feature_name, in_feature_name = unsatisfiedWalls.pop()
+    #  incoming = self.incoming["Ceiling_Flat"]
+    #  in_sel = int(self.get_incoming_tile_index(incoming, "Ceiling_Wall_4x4x4"))
 
-    while len(unsatisfiedWalls):
-      pos, angle, out_feature_name, in_feature_name = unsatisfiedWalls.pop()
-      incoming = self.incoming["Ceiling_Flat"]
-      in_sel = int(self.get_incoming_tile_index(incoming, "Ceiling_Wall_4x4x4"))
-
-      if self.try_tile(new_scene, todo, edges, pos, angle, incoming, in_sel):
-        in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
-        new_angle = lim360(angle - in_rot[2])
-        tile_pos = round3(add3(pos, rotateZ(neg3(in_trans), new_angle)))
-        tile_name = in_tile_name
-        ceilingNodes.append((tile_name, tile_pos, new_angle))
+    #  if self.try_tile(new_scene, todo, edges, pos, angle, incoming, in_sel):
+    #    in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
+    #    new_angle = lim360(angle - in_rot[2])
+    #    tile_pos = round3(add3(pos, rotateZ(neg3(in_trans), new_angle)))
+    #    tile_name = in_tile_name
+    #    ceilingNodes.append((tile_name, tile_pos, new_angle))
 
     
     print("Ceiling Complete!")
 
-    # create an unsatisfied edge
-
+    
     for node in ceilingNodes:
       nodes.append(node)
 
