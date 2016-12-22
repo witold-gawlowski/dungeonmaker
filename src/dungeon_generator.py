@@ -60,7 +60,7 @@ class dungeon_generator:
 
   def read_components(self):
     importer = fbx.FbxImporter.Create(self.sdk_manager, "")    
-    result = importer.Initialize("scenes/components6.fbx", -1, self.io_settings)
+    result = importer.Initialize("scenes/components7.fbx", -1, self.io_settings)
     if not result:
       raise BaseException("could not find components file")
     self.components = fbx.FbxScene.Create(self.sdk_manager, "")
@@ -385,15 +385,17 @@ class dungeon_generator:
     pos = (0,-2,8)
     edges = {}
     angle = 0
-    todo = [(pos, angle, "Floor_Flat", False)]
+    todo = [(pos, angle, "Ceiling_Flat", False)]
     num_tiles = 0
     ceilingNodes = []
 
-    ceilingNodes = self.complete_todo(new_scene, todo, edges, ceilingNodes, shape, "Floor_2x2", True)
+    ceilingNodes = self.complete_todo(new_scene, todo, edges, ceilingNodes, shape, "Ceiling_Floor_2x2", True)
     
-    todo = self.create_todo(edges, nodes)
+    todo = self.create_todo(edges, ceilingNodes)
           
     print("Todo length: ", len(todo))
+
+    ceilingNodes = self.complete_todo(new_scene, todo, edges, ceilingNodes, None, "Ceiling_Wall_4x4x4", False)
 
     #while len(unsatisfiedWalls):
     #  pos, angle, out_feature_name, in_feature_name = unsatisfiedWalls.pop()
