@@ -21,13 +21,21 @@
     <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="chamber_generator.py" />
+    <Compile Include="componentsIO.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="dungeon_generator.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="main.py" />
+    <Compile Include="room_generator.py" />
     <Compile Include="stairs_generator.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="tile_filter.py" />
+    <Compile Include="tile_handler.py" />
+    <Compile Include="tile_util.py" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="{9a7a9026-48c1-4688-9d5d-e5699d47d074}\3.3" />
@@ -36,6 +44,8 @@
     <Folder Include="scenes\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="fbx.pyd" />
+    <Content Include="fbxsip.pyd" />
     <Content Include="scenes\components.blend" />
     <Content Include="scenes\components.fbx" />
     <Content Include="scenes\modular2.fbx" />
