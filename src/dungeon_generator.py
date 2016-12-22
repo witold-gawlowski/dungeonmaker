@@ -9,43 +9,7 @@ import fbx
 
 import tile_filter
 
-# FbxDouble3 unpacker
-def tolist(x):
-  return [x[i] for i in range(3)]
-
-# FbxDouble3 packer
-def tovec3(x):
-  return fbx.FbxDouble3(x[0], x[1], x[2], x[3])
-
-def round3(x):
-  return (round(x[0]), round(x[1]), round(x[2]))
-
-def add3(x, y):
-  return [x[i]+y[i] for i in range(3)]
-
-def sub3(x, y):
-  return [x[i]-y[i] for i in range(3)]
-
-def neg3(x):
-  return [-x[i] for i in range(3)]
-
-def xy_location(x):
-  return (round(x[0]), round(x[1]))
-
-def rotateZ(v, angle):
-  sz = math.sin(angle * (3.14159/180))
-  cz = math.cos(angle * (3.14159/180))
-  return [
-    cz * v[0] - sz * v[1],
-    sz * v[0] + cz * v[1],
-    v[2]
-  ]
-
-def lim360(x):
-  x = x + 360 if x < 0 else x
-  x = x - 360 if x >= 360 else x
-  return round(x)
-  
+import tile_util
 
 class dungeon_generator:
   def __init__(self):  
@@ -156,8 +120,8 @@ class dungeon_generator:
     #print("\nNAME: ", in_tile_name, "\n")
 
     # from the feature, set the position and rotation of the new tile
-    new_angle = lim360(angle - in_rot[2])
-    tile_pos = add3(pos, rotateZ(neg3(in_trans), new_angle))
+    new_angle = tile_util.lim360(angle - in_rot[2])
+    tile_pos = tile_util.add3(pos, tile_util.rotateZ(tile_util.neg3(in_trans), new_angle))
     tile_name = in_tile_name
     #print(tile_pos, new_angle, tile_name)
 
@@ -169,9 +133,9 @@ class dungeon_generator:
     # although we know that one edge fits, we haven't checked the others.
     for out_sel in range(len(outgoing)):
       out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
-      new_pos = add3(tile_pos, rotateZ(out_trans, new_angle))
-      if round3(new_pos) in edges:
-        edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[round3(new_pos)]
+      new_pos = tile_util.add3(tile_pos, tile_util.rotateZ(out_trans, new_angle))
+      if tile_util.xyz_round(new_pos) in edges:
+        edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[tile_util.xyz_round(new_pos)]
         #print("check", new_pos, edge_pos, out_feature_name, edge_feature_name, edge_satisfied)
         if edge_satisfied:
           return False
@@ -206,16 +170,16 @@ class dungeon_generator:
     # note: if there were multiple outgoing edge choices, we would have to select them.
     for out_sel in range(len(outgoing)):
       out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
-      new_pos = add3(tile_pos, rotateZ(out_trans, new_angle))
-      if not round3(new_pos) in edges:
+      new_pos = tile_util.add3(tile_pos, tile_util.rotateZ(out_trans, new_angle))
+      if not tile_util.xyz_round(new_pos) in edges:
         # make an unsatisfied edge
-        edge = (new_pos, lim360(new_angle + out_rot[2]), out_feature_name, None)
-        edges[round3(new_pos)] = edge
+        edge = (new_pos, tile_util.lim360(new_angle + out_rot[2]), out_feature_name, None)
+        edges[tile_util.xyz_round(new_pos)] = edge
         todo.append(edge)
         #print(edge)
       else:
-        edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[round3(new_pos)]
-        edges[round3(new_pos)] = (edge_pos, edge_angle, edge_feature_name, out_feature_name)
+        edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[tile_util.xyz_round(new_pos)]
+        edges[tile_util.xyz_round(new_pos)] = (edge_pos, edge_angle, edge_feature_name, out_feature_name)
 
     #self.make_node(new_scene, tile_name, tile_pos, new_angle)
     #print("pass")
@@ -244,7 +208,7 @@ class dungeon_generator:
     while len(todo) and num_tiles < 200:
       pos, angle, out_feature_name, in_feature_name = todo.pop()
 
-      print(xy_location(pos))
+      print(tile_util.xy_round(pos))
 
       for i in range(4):
         # incoming features are indexed on the feature name
@@ -292,16 +256,16 @@ class dungeon_generator:
       outgoing = self.outgoing[tile_name]
       for out_sel in range(len(outgoing)):
         out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
-        new_pos = add3(tile_pos, rotateZ(out_trans, new_angle))
-        if round3(new_pos) in edges:
-          edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[round3(new_pos)]
+        new_pos = tile_util.add3(tile_pos, tile_util.rotateZ(out_trans, new_angle))
+        if tile_util.xyz_round(new_pos) in edges:
+          edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[tile_util.xyz_round(new_pos)]
           if not edge_satisfied:
             if feature_names is None:
-              todo.append(edges[round3(new_pos)])
+              todo.append(edges[tile_util.xyz_round(new_pos)])
             else:
               for name in feature_names:
                 if name == edge_feature_name:
-                  todo.append(edges[round3(new_pos)])
+                  todo.append(edges[tile_util.xyz_round(new_pos)])
     return todo
 
   def complete_todo(self, new_scene, todo, edges, nodes, boundary = None, tile_name = None, flood_fill = False):
@@ -315,12 +279,12 @@ class dungeon_generator:
       in_sel = int(self.get_incoming_tile_index(incoming, tile_name))
 
       in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
-      new_angle = lim360(angle - in_rot[2])
-      tile_pos = round3(add3(pos, rotateZ(neg3(in_trans), new_angle)))
+      new_angle = tile_util.lim360(angle - in_rot[2])
+      tile_pos = tile_util.xyz_round(tile_util.add3(pos, tile_util.rotateZ(tile_util.neg3(in_trans), new_angle)))
       tile_name = in_tile_name
 
       if not boundary is None:
-        if not self.in_shape_range(boundary, xy_location(tile_pos), 4):
+        if not self.in_shape_range(boundary, tile_util.xy_round(tile_pos), 4):
           continue
 
       if self.try_tile(new_scene, (todo if flood_fill else junk), edges, pos, angle, incoming, in_sel):
@@ -404,8 +368,8 @@ class dungeon_generator:
 
     #  if self.try_tile(new_scene, todo, edges, pos, angle, incoming, in_sel):
     #    in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
-    #    new_angle = lim360(angle - in_rot[2])
-    #    tile_pos = round3(add3(pos, rotateZ(neg3(in_trans), new_angle)))
+    #    new_angle = tile_util.lim360(angle - in_rot[2])
+    #    tile_pos = tile_util.xyz_round(tile_util.add3(pos, tile_util.rotateZ(tile_util..neg3(in_trans), new_angle)))
     #    tile_name = in_tile_name
     #    ceilingNodes.append((tile_name, tile_pos, new_angle))
 
