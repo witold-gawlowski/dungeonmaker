@@ -9,8 +9,6 @@ class fbx_io:
     self.io_settings = fbx.FbxIOSettings.Create(self.sdk_manager, fbx.IOSROOT)
     self.sdk_manager.SetIOSettings(self.io_settings)
 
-
-
   def import_file(self, file_name):
     importer = fbx.FbxImporter.Create(self.sdk_manager, "")    
     result = importer.Initialize("scenes/"+file_name+".fbx", -1, self.io_settings)
@@ -23,7 +21,6 @@ class fbx_io:
     root = self.components.GetRootNode()
     top_level = [root.GetChild(i) for i in range(root.GetChildCount())]
 
-    
     tiles = self.tiles = {}
     for node in top_level:
       if node.GetChildCount():
@@ -47,7 +44,7 @@ class fbx_io:
     self.format = self.get_format(file_type)
     new_scene = fbx.FbxScene.Create(self.sdk_manager, output_name);
 
-        # clone the tile meshes and name them after their original nodes.
+    # clone the tile meshes and name them after their original nodes.
     tile_meshes = self.tile_meshes = {}
     for name in self.tiles:
       tile = self.tiles[name]
@@ -57,7 +54,6 @@ class fbx_io:
 
     return new_scene
 
-
   def export_scene(self, scene, output_name = "result"):
     exporter = fbx.FbxExporter.Create(self.sdk_manager, "")
     
@@ -65,7 +61,6 @@ class fbx_io:
       exporter.Export(scene)
 
     exporter.Destroy()
-
 
   def make_node(self, scene, node_name, pos, angle):
     dest_node = fbx.FbxNode.Create( scene, node_name )

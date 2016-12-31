@@ -8,7 +8,6 @@ class chamber_generator:
     tile_h = tile_handler.tile_handler(top_level)
 
     self.rg = room_generator.room_generator(tile_h)
-    #rg.read_components()
     
 
     sg = stairs_generator.stairs_generator()

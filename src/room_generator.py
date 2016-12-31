@@ -1,13 +1,11 @@
 
 
 import math
-import random
 
 # if (when) this doesn't work, copy 64 bit Python 3.3 fbx.pyd and fbxsip.pyd from the Autodesk FBX SDK
 # into this directory
-import fbx
 
-import tile_util
+
 import tile_handler
 
 
@@ -17,11 +15,21 @@ class room_generator:
 
 
   def create_room(self, new_scene, feature_name):
+    print("Creating room ... ")
+
     tile_size = 4;
-    shape = [((2,-8,0), (4,4)),
-             ((2,28,0), (20,15)),
-             ((2,70,0), (8,8)),
-             ((2,28,0), (24,6))]
+    #shape = [((2,  -8,  0), (4,  4,  10)),
+    #         ((2,  28,  0), (20, 15, 12)),
+    #         ((2,  70,  0), (8,  8,  21)),
+    #         ((2,  28,  0), (24, 6,  19))]
+    shape = [((0,  0,  0), (16,  40,  3)),
+             ((0,  8,  0), (10,  36,  8)),
+             ((0,  72,  0), (30,  8,  3)),
+             ((0,  72,  0), (24,  4,  8)),
+             ((0,  72,  0), (6,  4,  10)),
+             ((0,  104,  0), (10,  8,  3)),
+             ((0,  100,  0), (6,  6,  8))]
+
 
     #shape = [((2,0,0), (20,1)),
     #         ((2,20,0), (20,1)),
@@ -32,56 +40,58 @@ class room_generator:
     #shape = [((0,0,0), (4,3))]
     shape = self.tile_handler.snap_room_center(shape, tile_size)
 
-    pos = (0,-2,0)
+    # Sort the shape in order of tallest square to shortest square
+    shape = sorted(shape, key = lambda tup: tup[1][2], reverse = True)
+    
+    nodes = []
+
+    pos = self.tile_handler.start_position_in_shape(shape, tile_size)
+    pos = (pos[0], pos[1]-tile_size*0.5, 0)
     edges = {}
     angle = 0
     # create an unsatisfied edge
     todo = [(pos, angle, feature_name, False)]
-    num_tiles = 0
 
-    nodes = []
+    
+    
+    # FLOOR =================================================
+    nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, shape, None, "Floor_2x2", True)
 
-    print("Making floor...")
-
-    nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, shape, "Floor_2x2", True)
-
-    print("Floor Complete!")
-
-
-    print("Making walls...")
+    # WALLS =================================================
     todo = self.tile_handler.create_todo(edges, nodes)
-    print("Todo length: ", len(todo))
+    nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, None, None, "Floor_Wall_4x4x4", False) 
 
-    nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, None, "Floor_Wall_4x4x4", False)      
-    print("Walls Complete!")
-
-    print("Making Corners...")
     todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
-    print("Todo length: ", len(todo))
-    nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, None, "Floor_Wall_L_4x4x4", False)
-    print("Corners Complete!")
+    nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, None, None, "Floor_Wall_L_4x4x4", False)
     
-    print("Making Ceiling...")
-    pos = (0,-2,8)
-    edges = {}
-    angle = 0
-    todo = [(pos, angle, "Ceiling_Flat", False)]
-    num_tiles = 0
+    # CEILING ==============================================
+    
     ceilingNodes = []
+    mask = []
+    last_height = 0;
+    for i in range(len(shape)):
+      square = shape[i]
 
-    ceilingNodes = self.tile_handler.complete_todo(new_scene, todo, edges, ceilingNodes, shape, "Ceiling_Floor_2x2", True)
-    
-    #todo = self.tile_handler.create_todo(edges, ceilingNodes)
-          
-    print("Todo length: ", len(todo))
+      if last_height > square[1][2]: 
+        (roomCenter, size) = mask[len(mask)-1]
+        size = (size[0]+2,size[1]+2,size[2]) # Make space for walls
+        mask[len(mask)-1] = ((roomCenter, size))
 
-    #ceilingNodes = self.tile_handler.complete_todo(new_scene, todo, edges, ceilingNodes, None, "Ceiling_Wall_4x4x4", False)
-    
-    print("Ceiling Complete!")
+      pos = self.tile_handler.start_position_in_shape([square], tile_size)
+      pos = (pos[0], pos[1] - tile_size * 0.5, tile_size * square[1][2])
+      angle = 0
+      edges = {}
+      todo = [(pos, angle, "Ceiling_Flat", False)]
 
-    
-    for node in ceilingNodes:
-      nodes.append(node)
+      ceilingNodes = self.tile_handler.complete_todo(new_scene, todo, edges, ceilingNodes, [square], mask, "Ceiling_Floor_2x2", True)
+      
+      mask.append(square)
+
+      last_height = square[1][2]
+
+    nodes = nodes + ceilingNodes # Concatinate the arrays (lists)
+
+    print("Room Generation complete with ", len(nodes), " tiles")
 
     return nodes
 
