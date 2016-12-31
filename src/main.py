@@ -1,7 +1,30 @@
 import chamber_generator
-
+import fbx_io
 
 if __name__ == '__main__':
-  chamber = chamber_generator.chamber_generator()
-  chamber.create_chamber()
+
+  # Read input
+  fbx_file_io = fbx_io.fbx_io()
+  top_level = fbx_file_io.import_file("components7")
+
+  # Create a scene for scene objects to be attached to
+  scene = fbx_file_io.create_scene("FBX ascii")
+
+  # Initialise rooms and stairs generators (to be used in the algorythm bellow)
+  chamber = chamber_generator.chamber_generator(top_level)
+
+  # Algorithm to stitch rooms together
+  # Each room is returned as an array of "nodes" (tile instances)
+  # all these array's of nodes will be needed to write the fbx output
+  nodes = chamber.generate_chamber(scene)
+
+  # This takes all the nodes and sends them to the FXB output.
+  for node in nodes:
+    (tile_name, tile_pos, new_angle) = node
+    fbx_file_io.make_node(scene, tile_name, tile_pos, new_angle)
+
+  # Write result
+  # Close fbx
+  fbx_file_io.export_scene(scene)
+  
   
