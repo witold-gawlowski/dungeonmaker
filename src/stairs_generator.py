@@ -2,46 +2,12 @@
 import re
 import math
 import random
+import tile_util
 
 # if (when) this doesn't work, copy 64 bit Python 3.3 fbx.pyd and fbxsip.pyd from the Autodesk FBX SDK
 # into this directory
 import fbx
-
-# FbxDouble3 unpacker
-def tolist(x):
-  return [x[i] for i in range(3)]
-
-# FbxDouble3 packer
-def tovec3(x):
-  return fbx.FbxDouble3(x[0], x[1], x[2], x[3])
-
-def add3(x, y):
-  return [x[i]+y[i] for i in range(3)]
-
-def sub3(x, y):
-  return [x[i]-y[i] for i in range(3)]
-
-def neg3(x):
-  return [-x[i] for i in range(3)]
-
-def xy_location(x):
-  return (round(x[0]), round(x[1]))
-
-def rotateZ(v, angle):
-  sz = math.sin(angle * (3.14159/180))
-  cz = math.cos(angle * (3.14159/180))
-  return [
-    cz * v[0] - sz * v[1],
-    sz * v[0] + cz * v[1],
-    v[2]
-  ]
-
-def lim360(x):
-  x = x + 360 if x < 0 else x
-  x = x - 360 if x >= 360 else x
-  return round(x)
   
-
 class stairs_generator:
   def __init__(self):  
     self.sdk_manager = fbx.FbxManager.Create()
@@ -148,8 +114,8 @@ class stairs_generator:
     #print("\nNAME: ", in_tile_name, "\n")
 
     # from the feature, set the position and rotation of the new tile
-    new_angle = lim360(angle - in_rot[2])
-    tile_pos = add3(pos, rotateZ(neg3(in_trans), new_angle))
+    new_angle = tile_util.lim360(angle - in_rot[2])
+    tile_pos = tile_util.add3(pos, tile_util.rotateZ(tile_util.neg3(in_trans), new_angle))
     tile_name = in_tile_name
     #print(tile_pos, new_angle, tile_name)
 
@@ -161,9 +127,9 @@ class stairs_generator:
     # although we know that one edge fits, we haven't checked the others.
     for out_sel in range(len(outgoing)):
       out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
-      new_pos = add3(tile_pos, rotateZ(out_trans, new_angle))
-      if xy_location(new_pos) in edges:
-        edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[xy_location(new_pos)]
+      new_pos = tile_util.add3(tile_pos, tile_util.rotateZ(out_trans, new_angle))
+      if tile_util.xyz_round(new_pos) in edges:
+        edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[tile_util.xyz_round(new_pos)]
         #print("check", new_pos, edge_pos, out_feature_name, edge_feature_name, edge_satisfied)
         if edge_satisfied:
           return False
@@ -186,16 +152,16 @@ class stairs_generator:
     # note: if there were multiple outgoing edge choices, we would have to select them.
     for out_sel in range(len(outgoing)):
       out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
-      new_pos = add3(tile_pos, rotateZ(out_trans, new_angle))
-      if not xy_location(new_pos) in edges:
+      new_pos = tile_util.add3(tile_pos, tile_util.rotateZ(out_trans, new_angle))
+      if not tile_util.xyz_round(new_pos) in edges:
         # make an unsatisfied edge
-        edge = (new_pos, lim360(new_angle + out_rot[2]), out_feature_name, None)
-        edges[xy_location(new_pos)] = edge
+        edge = (new_pos, tile_util.lim360(new_angle + out_rot[2]), out_feature_name, None)
+        edges[tile_util.xyz_round(new_pos)] = edge
         todo.append(edge)
         #print(edge)
       else:
-        edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[xy_location(new_pos)]
-        edges[xy_location(new_pos)] = (edge_pos, edge_angle, edge_feature_name, out_feature_name)
+        edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[tile_util.xyz_round(new_pos)]
+        edges[tile_util.xyz_round(new_pos)] = (edge_pos, edge_angle, edge_feature_name, out_feature_name)
 
     #self.make_node(new_scene, tile_name, tile_pos, new_angle)
     #print("pass")
@@ -224,7 +190,7 @@ class stairs_generator:
     while len(todo) and num_tiles < 200:
       pos, angle, out_feature_name, in_feature_name = todo.pop()
 
-      print(xy_location(pos))
+      print(tile_util.xyz_round(pos))
 
       for i in range(4):
         # incoming features are indexed on the feature name
@@ -272,7 +238,7 @@ class stairs_generator:
              #((2,40,0), (20,1)),
              #((38,8,0), (2,4)),
              #((-34,28,0), (2,4))]
-    shape = [((2,0,0),(10,10))]
+    shape = [((2,0,0),(1,1))]
 
     edges = {}
     pos = (2,0,0)
@@ -291,7 +257,7 @@ class stairs_generator:
     while len(todo) and num_tiles < 10000:
       pos, angle, out_feature_name, in_feature_name = todo.pop()
 
-      if (not self.in_room_range(shape, xy_location(pos), tileSize)):
+      if (not self.in_room_range(shape, tile_util.xyz_round(pos), tileSize)):
         #print(xy_location(pos))
         continue
       # incoming features are indexed on the feature name
@@ -300,19 +266,19 @@ class stairs_generator:
   
       # Gets the tiles which are used on this pass
       allowed_tiles = [int(self.get_incoming_tile_index(incoming,"Floor_2x2")),
-                       int(self.get_incoming_tile_index(incoming,"Steps_01")), 
-                       int(self.get_incoming_tile_index(incoming,"Steps_L_Inner_01")), 
-                       int(self.get_incoming_tile_index(incoming,"Steps_L_Inner_Curved_01")), 
-                       int(self.get_incoming_tile_index(incoming,"Steps_L_Outer_01")), 
-                       int(self.get_incoming_tile_index(incoming,"Steps_L_Outer_Curved01"))]
+                       int(self.get_incoming_tile_index(incoming,"Steps_01"))] 
+                       #int(self.get_incoming_tile_index(incoming,"Steps_L_Inner_01")), 
+                       #int(self.get_incoming_tile_index(incoming,"Steps_L_Inner_Curved_01")), 
+                       #int(self.get_incoming_tile_index(incoming,"Steps_L_Outer_01")), 
+                       #int(self.get_incoming_tile_index(incoming,"Steps_L_Outer_Curved01"))]
 
       # Picks a random tile to connect 
       in_sel = allowed_tiles[random.randrange(len(allowed_tiles))]
 
       if self.try_tile(new_scene, todo, edges, pos, angle, incoming, in_sel):
         in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
-        new_angle = lim360(angle - in_rot[2])
-        tile_pos = add3(pos, rotateZ(neg3(in_trans), new_angle))
+        new_angle = tile_util.lim360(angle - in_rot[2])
+        tile_pos = tile_util.add3(pos, tile_util.rotateZ(tile_util.neg3(in_trans), new_angle))
         tile_name = in_tile_name
         nodes.append((tile_name, tile_pos, new_angle))
 
@@ -329,11 +295,11 @@ class stairs_generator:
       outgoing = self.outgoing[tile_name]
       for out_sel in range(len(outgoing)):
         out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
-        new_pos = add3(tile_pos, rotateZ(out_trans, new_angle))
-        if xy_location(new_pos) in edges:
-          edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[xy_location(new_pos)]
+        new_pos = tile_util.add3(tile_pos, tile_util.rotateZ(out_trans, new_angle))
+        if tile_util.xyz_round(new_pos) in edges:
+          edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[tile_util.xyz_round(new_pos)]
           if not edge_satisfied:
-            todo.append(edges[xy_location(new_pos)])
+            todo.append(edges[tile_util.xyz_round(new_pos)])
           
     print("Todo length: ", len(todo))
 
@@ -360,8 +326,8 @@ class stairs_generator:
 
       if self.try_tile(new_scene, todo, edges, pos, angle, incoming, in_sel):
         in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
-        new_angle = lim360(angle - in_rot[2])
-        tile_pos = add3(pos, rotateZ(neg3(in_trans), new_angle))
+        new_angle = tile_util.lim360(angle - in_rot[2])
+        tile_pos = tile_util.add3(pos, tile_util.rotateZ(tile_util.neg3(in_trans), new_angle))
         tile_name = in_tile_name
         nodes.append((tile_name, tile_pos, new_angle))
           
