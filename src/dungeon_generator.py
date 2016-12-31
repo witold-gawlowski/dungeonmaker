@@ -12,10 +12,7 @@ import tile_filter
 import tile_util
 
 class dungeon_generator:
-  def __init__(self, tile_handler):  
-    self.tile_handler = tile_handler
-    
-    
+  def __init__(self):  
     self.sdk_manager = fbx.FbxManager.Create()
     if not self.sdk_manager:
       sys.exit(1)
@@ -339,7 +336,7 @@ class dungeon_generator:
     todo = self.create_todo(edges, nodes)
     print("Todo length: ", len(todo))
 
-    nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, None, "Floor_Wall_4x4x4", False)      
+    nodes = self.complete_todo(new_scene, todo, edges, nodes, None, "Floor_Wall_4x4x4", False)      
     print("Walls Complete!")
 
     print("Making Corners...")
