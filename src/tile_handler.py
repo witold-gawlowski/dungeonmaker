@@ -18,11 +18,6 @@ class tile_handler:
     self.blacklist["step_up"] = ["step_up"]
     self.blacklist["step_down"] = ["step_down"]
 
-    # =============== TO BE MOVED IN IMPORT ----
-    
-    # =============== TO BE MOVED IN IMPORT ^^^^^^^^
-
-
     # child nodes matching this pattern are feature markup
     feature_pattern = re.compile('(\<|\>)([^.]+)(\..*)?')
 
@@ -167,6 +162,25 @@ class tile_handler:
     return None
   ## ======== END get_incoming_tile_index
 
+  # Returns an XY position, the Z must be calculated seperately
+  # Returns the center of a potential tile, translation is needed to obtain the edge (if you want to add it to a todo list)
+  def start_position_in_shape(self, shape, scale):
+    for square in shape:
+      (roomCenter, size) = square
+      pos = (0, 0);
+      if size[0] % 2 == 0:
+        pos = (roomCenter[0]-scale*0.5, pos[1])
+      else:
+        pos = (roomCenter[0], pos[1])
+
+      if size[1] % 2 == 0:
+        pos = (pos[0], roomCenter[1]-scale*0.5)
+      else:
+        pos = (pos[0], roomCenter[1])
+
+      return pos
+  # ======== END start_position_in_shape
+
   def in_shape_range(self, shape, pos, scale):
     for square in shape:
       (roomCenter, size) = square
@@ -195,7 +209,7 @@ class tile_handler:
     return todo
   ## ======== END create_todo
 
-  def complete_todo(self, new_scene, todo, edges, nodes, boundary = None, tile_name = None, flood_fill = False):
+  def complete_todo(self, new_scene, todo, edges, nodes, boundary = None, mask = None, tile_name = None, flood_fill = False):
     if flood_fill and boundary is None:
       raise ValueError("You can't flood fill without a boundary! boundary is ", boundary, " and flood_fill is ", flood_fill)
 
@@ -215,6 +229,10 @@ class tile_handler:
           continue
 
       if self.try_tile(new_scene, (todo if flood_fill else junk), edges, pos, angle, incoming, in_sel):
+        if not mask is None:
+          if self.in_shape_range(mask, tile_util.xy_round(tile_pos), 4):
+            continue
+
         nodes.append((tile_name, tile_pos, new_angle))
 
     return nodes
