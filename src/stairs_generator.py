@@ -167,6 +167,69 @@ class stairs_generator:
     #print("pass")
     return True
 
+  def try_specific_tile(self, new_scene, todo, edges, pos, angle, incoming, in_sel, edge_name):
+
+    #print("\n------------\n",incoming)
+
+    in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
+    #print("\nNAME: ", in_tile_name, "\n")
+
+    # from the feature, set the position and rotation of the new tile
+    new_angle = tile_util.lim360(angle - in_rot[2])
+    tile_pos = tile_util.add3(pos, tile_util.rotateZ(tile_util.neg3(in_trans), new_angle))
+    tile_name = in_tile_name
+    #print(tile_pos, new_angle, tile_name)
+
+    # outgoing features are indexed on the tile name
+    outgoing = self.outgoing[tile_name]
+    #print(outgoing)
+
+    # check existing edges to see if this tile fits.
+    # although we know that one edge fits, we haven't checked the others.
+    for out_sel in range(len(outgoing)):
+      out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
+      new_pos = tile_util.add3(tile_pos, tile_util.rotateZ(out_trans, new_angle))
+      if tile_util.xyz_round(new_pos) in edges:
+        edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[tile_util.xyz_round(new_pos)]
+        #print("check", new_pos, edge_pos, out_feature_name, edge_feature_name, edge_satisfied)
+        if edge_satisfied:
+          return False
+        # check the height of the join.
+        # note: we should also check that the incoming matches the outgoing.
+        if abs(edge_pos[2] - new_pos[2]) > 0.01:
+          #print("fail")
+          return False
+        
+        # Check to see that the feature types match up "flat = flat" also check for the exception where "step_up" must match to "step_down"
+        if out_feature_name == "step_down" or out_feature_name == "step_up":
+          if (out_feature_name == "step_down" and edge_feature_name != "step_up"):
+            return False
+          elif (out_feature_name == "step_up" and edge_feature_name != "step_down"):
+            return False
+        elif not edge_feature_name == out_feature_name:
+          return False
+
+    # add all outgoing edges to the todo list and mark edges
+    # note: if there were multiple outgoing edge choices, we would have to select them.
+    for out_sel in range(len(outgoing)):
+      out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
+      new_pos = tile_util.add3(tile_pos, tile_util.rotateZ(out_trans, new_angle))
+      if not tile_util.xyz_round(new_pos) in edges:
+        # Picking only edges with the edge_name
+        if out_feature_name == edge_name:
+          # make an unsatisfied edge
+          edge = (new_pos, tile_util.lim360(new_angle + out_rot[2]), out_feature_name, None)
+          edges[tile_util.xyz_round(new_pos)] = edge
+          todo.append(edge)
+          #print(edge)
+      else:
+        edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[tile_util.xyz_round(new_pos)]
+        edges[tile_util.xyz_round(new_pos)] = (edge_pos, edge_angle, edge_feature_name, out_feature_name)
+
+    #self.make_node(new_scene, tile_name, tile_pos, new_angle)
+    #print("pass")
+    return True
+
 
   def create_dungeon(self, new_scene, feature_name):
     # clone the tile meshes and name them after their original nodes.
@@ -238,7 +301,7 @@ class stairs_generator:
              #((2,40,0), (20,1)),
              #((38,8,0), (2,4)),
              #((-34,28,0), (2,4))]
-    shape = [((2,0,0),(1,1))]
+    shape = [((2,0,0),(10,10))]
 
     edges = {}
     pos = (2,0,0)
@@ -254,7 +317,7 @@ class stairs_generator:
     print("Making floor...")
     # this loop processes one edge from the todo list.
     # It generates the room by checking how far 
-    while len(todo) and num_tiles < 10000:
+    while len(todo) and num_tiles < 100:
       pos, angle, out_feature_name, in_feature_name = todo.pop()
 
       if (not self.in_room_range(shape, tile_util.xyz_round(pos), tileSize)):
@@ -266,7 +329,7 @@ class stairs_generator:
   
       # Gets the tiles which are used on this pass
       allowed_tiles = [int(self.get_incoming_tile_index(incoming,"Floor_2x2")),
-                       int(self.get_incoming_tile_index(incoming,"Steps_01"))] 
+                       int(self.get_incoming_tile_index(incoming,"Steps_01"))]
                        #int(self.get_incoming_tile_index(incoming,"Steps_L_Inner_01")), 
                        #int(self.get_incoming_tile_index(incoming,"Steps_L_Inner_Curved_01")), 
                        #int(self.get_incoming_tile_index(incoming,"Steps_L_Outer_01")), 
@@ -275,7 +338,7 @@ class stairs_generator:
       # Picks a random tile to connect 
       in_sel = allowed_tiles[random.randrange(len(allowed_tiles))]
 
-      if self.try_tile(new_scene, todo, edges, pos, angle, incoming, in_sel):
+      if self.try_specific_tile(new_scene, todo, edges, pos, angle, incoming, in_sel,"Floor_Flat"):
         in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
         new_angle = tile_util.lim360(angle - in_rot[2])
         tile_pos = tile_util.add3(pos, tile_util.rotateZ(tile_util.neg3(in_trans), new_angle))
@@ -314,10 +377,11 @@ class stairs_generator:
       incoming = self.incoming[out_feature_name]
       
            # Gets the tiles which are used on this pass
-      allowed_tiles = [int(self.get_incoming_tile_index(incoming,"Floor_Wall_L_01")),
-                       int(self.get_incoming_tile_index(incoming,"Floor_Wall_End_01")), 
-                       int(self.get_incoming_tile_index(incoming,"Floor_Wall_01")), 
-                       int(self.get_incoming_tile_index(incoming,"Floor_Wall_L_Curved_01"))]
+      allowed_tiles = [int(self.get_incoming_tile_index(incoming,"Floor_Wall_T_4x4x4")),
+                       int(self.get_incoming_tile_index(incoming,"Floor_Wall_X_4x4x4")), 
+                       int(self.get_incoming_tile_index(incoming,"Floor_Wall_L_4x4x4")), 
+                       int(self.get_incoming_tile_index(incoming,"Floor_Wall_End_4x4x4")),
+                       int(self.get_incoming_tile_index(incoming,"Floor_Wall_4x4x4"))]
 
       # Picks a random tile to connect 
       in_sel = allowed_tiles[random.randrange(len(allowed_tiles))]
