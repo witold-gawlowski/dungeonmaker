@@ -29,7 +29,7 @@ class stairs_generator:
     door_B_pos = (0,10,0)
     door_B_pos = self.tile_handler.snap_to_edge(door_B_pos, grid_size)
     # DOORS ===============================================
-
+    #todo = [(door_A_pos, 0,", False)]
 
 
     
