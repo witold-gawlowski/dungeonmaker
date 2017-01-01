@@ -13,10 +13,16 @@ class tile_handler:
     self.whitelist["step_down"] = ["step_up"]
     self.whitelist["Ceiling_Flat"] = ["Floor_Flat"]
     self.whitelist["Floor_Flat"] = ["Ceiling_Flat"]
+    self.whitelist["Wall_St_Bottom"] = ["Wall_St_Top"]
+    self.whitelist["Wall_St_Top"] = ["Wall_St_Bottom"]
+    self.whitelist["Wall_L_Bottom"] = ["Wall_L_Top"]
+    self.whitelist["Wall_L_Top"] = ["Wall_L_Bottom"]
 
     self.blacklist = {}
     self.blacklist["step_up"] = ["step_up"]
     self.blacklist["step_down"] = ["step_down"]
+
+    self.tile_size = 4
 
     # child nodes matching this pattern are feature markup
     feature_pattern = re.compile('(\<|\>)([^.]+)(\..*)?')
@@ -222,7 +228,8 @@ class tile_handler:
     if flood_fill and boundary is None:
       raise ValueError("You can't flood fill without a boundary! boundary is ", boundary, " and flood_fill is ", flood_fill)
 
-    junk = []
+    junk_todo = []
+    junk_edges = {}
     while len(todo):
       pos, angle, out_feature_name, in_feature_name = todo.pop()
       incoming = self.incoming[out_feature_name]
@@ -234,21 +241,29 @@ class tile_handler:
       tile_name = in_tile_name
 
       if not boundary is None:
-        if not self.in_shape_range(boundary, tile_util.xy_round(tile_pos), 4):
+        if not self.in_shape_range(boundary, tile_util.xy_round(tile_pos), self.tile_size):
           continue
 
-      if self.try_tile(new_scene, (todo if flood_fill else junk), edges, pos, angle, incoming, in_sel):
+      if self.try_tile(new_scene, (todo if flood_fill else junk_todo), (edges if mask is None else junk_edges), pos, angle, incoming, in_sel):
         if not mask is None:
-          if self.in_shape_range(mask, tile_util.xy_round(tile_pos), 4):
+          if self.in_shape_range(mask, tile_util.xy_round(tile_pos), self.tile_size):
             continue
+          else:
+            outgoing = self.outgoing[tile_name]
+            for out_sel in range(len(outgoing)):
+              out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
+              new_pos = tile_util.add3(tile_pos, tile_util.rotateZ(out_trans, new_angle))
+              if not tile_util.xyz_round(new_pos) in edges:
+                # make an unsatisfied edge
+                edge = (new_pos, tile_util.lim360(new_angle + out_rot[2]), out_feature_name, None)
+                edges[tile_util.xyz_round(new_pos)] = edge
+                todo.append(edge)
+                #print(edge)
+              else:
+                edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[tile_util.xyz_round(new_pos)]
+                edges[tile_util.xyz_round(new_pos)] = (edge_pos, edge_angle, edge_feature_name, out_feature_name)
 
         nodes.append((tile_name, tile_pos, new_angle))
 
     return nodes
   ## ======== END complete_todo
-
-
-
-
-
-
