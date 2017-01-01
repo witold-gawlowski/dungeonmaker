@@ -7,13 +7,11 @@ class chamber_generator:
 
     tile_h = tile_handler.tile_handler(top_level)
 
-    self.rg = room_generator.room_generator(tile_h)
-    
-
-    sg = stairs_generator.stairs_generator()
-    sg.read_components()
-    #sg.write_result()
-    
+    self.rg = room_generator.room_generator(tile_h) 
+    self.sg = stairs_generator.stairs_generator(tile_h)
+        
   
   def generate_chamber(self, scene):
-    return self.rg.create_room(scene, "Floor_Flat")
+    #cg = self.rg.create_room(scene, "Floor_Flat")
+    cg = self.sg.create_stairs(scene,"Floor_Flat")
+    return cg

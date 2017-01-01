@@ -1,410 +1,99 @@
 
-import re
 import math
-import random
-import tile_util
 
 # if (when) this doesn't work, copy 64 bit Python 3.3 fbx.pyd and fbxsip.pyd from the Autodesk FBX SDK
 # into this directory
-import fbx
-  
+
+
+import tile_handler
+
+
 class stairs_generator:
-  def __init__(self):  
-    self.sdk_manager = fbx.FbxManager.Create()
-    if not self.sdk_manager:
-      sys.exit(1)
-    
-    self.io_settings = fbx.FbxIOSettings.Create(self.sdk_manager, fbx.IOSROOT)
-    self.sdk_manager.SetIOSettings(self.io_settings)
-
-  def read_components(self):
-    importer = fbx.FbxImporter.Create(self.sdk_manager, "")    
-    result = importer.Initialize("scenes/components6.fbx", -1, self.io_settings)
-    if not result:
-      raise BaseException("could not find components file")
-    self.components = fbx.FbxScene.Create(self.sdk_manager, "")
-    result = importer.Import(self.components)
-    importer.Destroy()
-
-    root = self.components.GetRootNode()
-    top_level = [root.GetChild(i) for i in range(root.GetChildCount())]
-
-    # child nodes matching this pattern are feature markup
-    feature_pattern = re.compile('(\<|\>)([^.]+)(\..*)?')
-
-    incoming = self.incoming = {}
-    outgoing = self.outgoing = {}
-    tiles = self.tiles = {}
-
-    # find the tiles in the file with at least one child (the connectors)
-    for node in top_level:
-      if node.GetChildCount():
-        # for each tile, check the names of the connectors
-        tiles[node.GetName()] = node;
-        connectors = [node.GetChild(i) for i in range(node.GetChildCount())]
-        tile_name = node.GetName()
-        #print("%s has %d children" % (tile_name, node.GetChildCount()))
-        for c in connectors:
-          conn_name = c.GetName();
-          # use a regular expression to match the connector name
-          # and discard any trailing numbers
-          match = feature_pattern.match(conn_name)
-          if match:
-            direction = match.group(1)
-            feature_name = match.group(2)
-            #print("  %s %s %s" % (tile_name, direction, feature_name))
-            trans = c.LclTranslation.Get()
-            rot = c.LclRotation.Get()
-            result = (feature_name, tile_name, trans, rot)
-
-            if direction == '>':
-              # outgoing tile indexed by tile_name
-              idx = tile_name
-              dict = outgoing
-            else:
-              # incoming tile indexed by feature name
-              idx = feature_name
-              dict = incoming
-            if not idx in dict:
-              dict[idx] = []
-            dict[idx].append(result)
-
-    # at this point incoming and outgoing index connectors
-    # tiles indexes the tiles by name.
-    #print("self.incoming:", self.incoming)
-    #print("\n self.outgoing:", self.outgoing)
-
-  def get_format(self, name):
-    reg = self.sdk_manager.GetIOPluginRegistry()
-    for idx in range(reg.GetWriterFormatCount()):
-      desc = reg.GetWriterFormatDescription(idx)
-      #print(desc)
-      if name in desc:
-        return idx
-    return -1
-
-  def write_result(self):
-    #format = self.get_format("FBX binary")
-    format = self.get_format("FBX ascii")
-
-    new_scene = fbx.FbxScene.Create(self.sdk_manager, "result");
-    #self.create_dungeon(new_scene, "flat")
-    self.create_room(new_scene, "Floor_Flat")
-
-    exporter = fbx.FbxExporter.Create(self.sdk_manager, "")
-    
-    if exporter.Initialize("scenes/result.fbx", format, self.io_settings):
-      exporter.Export(new_scene)
-
-    exporter.Destroy()
-
-  def make_node(self, new_scene, node_name, pos, angle):
-    dest_node = fbx.FbxNode.Create( new_scene, node_name )
-    dest_node.SetNodeAttribute(self.tile_meshes[node_name])
-    dest_node.LclTranslation.Set(fbx.FbxDouble3(pos[0], pos[1], pos[2]))
-    dest_node.LclRotation.Set(fbx.FbxDouble3(0, 0, angle))
-    root = new_scene.GetRootNode()
-    root.AddChild(dest_node)
-
-  def try_tile(self, new_scene, todo, edges, pos, angle, incoming, in_sel):
-
-    #print("\n------------\n",incoming)
-
-    in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
-    #print("\nNAME: ", in_tile_name, "\n")
-
-    # from the feature, set the position and rotation of the new tile
-    new_angle = tile_util.lim360(angle - in_rot[2])
-    tile_pos = tile_util.add3(pos, tile_util.rotateZ(tile_util.neg3(in_trans), new_angle))
-    tile_name = in_tile_name
-    #print(tile_pos, new_angle, tile_name)
-
-    # outgoing features are indexed on the tile name
-    outgoing = self.outgoing[tile_name]
-    #print(outgoing)
-
-    # check existing edges to see if this tile fits.
-    # although we know that one edge fits, we haven't checked the others.
-    for out_sel in range(len(outgoing)):
-      out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
-      new_pos = tile_util.add3(tile_pos, tile_util.rotateZ(out_trans, new_angle))
-      if tile_util.xyz_round(new_pos) in edges:
-        edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[tile_util.xyz_round(new_pos)]
-        #print("check", new_pos, edge_pos, out_feature_name, edge_feature_name, edge_satisfied)
-        if edge_satisfied:
-          return False
-        # check the height of the join.
-        # note: we should also check that the incoming matches the outgoing.
-        if abs(edge_pos[2] - new_pos[2]) > 0.01:
-          #print("fail")
-          return False
-        
-        # Check to see that the feature types match up "flat = flat" also check for the exception where "step_up" must match to "step_down"
-        if out_feature_name == "step_down" or out_feature_name == "step_up":
-          if (out_feature_name == "step_down" and edge_feature_name != "step_up"):
-            return False
-          elif (out_feature_name == "step_up" and edge_feature_name != "step_down"):
-            return False
-        elif not edge_feature_name == out_feature_name:
-          return False
-
-    # add all outgoing edges to the todo list and mark edges
-    # note: if there were multiple outgoing edge choices, we would have to select them.
-    for out_sel in range(len(outgoing)):
-      out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
-      new_pos = tile_util.add3(tile_pos, tile_util.rotateZ(out_trans, new_angle))
-      if not tile_util.xyz_round(new_pos) in edges:
-        # make an unsatisfied edge
-        edge = (new_pos, tile_util.lim360(new_angle + out_rot[2]), out_feature_name, None)
-        edges[tile_util.xyz_round(new_pos)] = edge
-        todo.append(edge)
-        #print(edge)
-      else:
-        edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[tile_util.xyz_round(new_pos)]
-        edges[tile_util.xyz_round(new_pos)] = (edge_pos, edge_angle, edge_feature_name, out_feature_name)
-
-    #self.make_node(new_scene, tile_name, tile_pos, new_angle)
-    #print("pass")
-    return True
-
-  def try_specific_tile(self, new_scene, todo, edges, pos, angle, incoming, in_sel, edge_name):
-
-    #print("\n------------\n",incoming)
-
-    in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
-    #print("\nNAME: ", in_tile_name, "\n")
-
-    # from the feature, set the position and rotation of the new tile
-    new_angle = tile_util.lim360(angle - in_rot[2])
-    tile_pos = tile_util.add3(pos, tile_util.rotateZ(tile_util.neg3(in_trans), new_angle))
-    tile_name = in_tile_name
-    #print(tile_pos, new_angle, tile_name)
-
-    # outgoing features are indexed on the tile name
-    outgoing = self.outgoing[tile_name]
-    #print(outgoing)
-
-    # check existing edges to see if this tile fits.
-    # although we know that one edge fits, we haven't checked the others.
-    for out_sel in range(len(outgoing)):
-      out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
-      new_pos = tile_util.add3(tile_pos, tile_util.rotateZ(out_trans, new_angle))
-      if tile_util.xyz_round(new_pos) in edges:
-        edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[tile_util.xyz_round(new_pos)]
-        #print("check", new_pos, edge_pos, out_feature_name, edge_feature_name, edge_satisfied)
-        if edge_satisfied:
-          return False
-        # check the height of the join.
-        # note: we should also check that the incoming matches the outgoing.
-        if abs(edge_pos[2] - new_pos[2]) > 0.01:
-          #print("fail")
-          return False
-        
-        # Check to see that the feature types match up "flat = flat" also check for the exception where "step_up" must match to "step_down"
-        if out_feature_name == "step_down" or out_feature_name == "step_up":
-          if (out_feature_name == "step_down" and edge_feature_name != "step_up"):
-            return False
-          elif (out_feature_name == "step_up" and edge_feature_name != "step_down"):
-            return False
-        elif not edge_feature_name == out_feature_name:
-          return False
-
-    # add all outgoing edges to the todo list and mark edges
-    # note: if there were multiple outgoing edge choices, we would have to select them.
-    for out_sel in range(len(outgoing)):
-      out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
-      new_pos = tile_util.add3(tile_pos, tile_util.rotateZ(out_trans, new_angle))
-      if not tile_util.xyz_round(new_pos) in edges:
-        # Picking only edges with the edge_name
-        if out_feature_name == edge_name:
-          # make an unsatisfied edge
-          edge = (new_pos, tile_util.lim360(new_angle + out_rot[2]), out_feature_name, None)
-          edges[tile_util.xyz_round(new_pos)] = edge
-          todo.append(edge)
-          #print(edge)
-      else:
-        edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[tile_util.xyz_round(new_pos)]
-        edges[tile_util.xyz_round(new_pos)] = (edge_pos, edge_angle, edge_feature_name, out_feature_name)
-
-    #self.make_node(new_scene, tile_name, tile_pos, new_angle)
-    #print("pass")
-    return True
+  def __init__(self, tile_handler):  
+    self.tile_handler = tile_handler
 
 
-  def create_dungeon(self, new_scene, feature_name):
-    # clone the tile meshes and name them after their original nodes.
-    tile_meshes = self.tile_meshes = {}
-    for name in self.tiles:
-      tile = self.tiles[name]
-      tile_mesh = tile.GetNodeAttribute()
-      tile_meshes[name] = tile_mesh.Clone(fbx.FbxObject.eDeepClone, None)
-      tile_meshes[name].SetName(name)
+  def create_stairs(self, new_scene, feature_name):
+    print("Creating room ... ")
 
-    edges = {}
-    pos = (0, 0, 0)
-    angle = 0
+    tile_size = 4;
+    #shape = [((2,  -8,  0), (4,  4,  10)),
+    #         ((2,  28,  0), (20, 15, 12)),
+    #         ((2,  70,  0), (8,  8,  21)),
+    #         ((2,  28,  0), (24, 6,  19))]
+    shape = [((0,  0,  0), (16,  40,  3)),
+             ((0,  8,  0), (10,  36,  8)),
+             ((0,  72,  0), (30,  8,  3)),
+             ((0,  72,  0), (24,  4,  8)),
+             ((0,  72,  0), (6,  4,  10)),
+             ((0,  104,  0), (10,  8,  3)),
+             ((0,  100,  0), (6,  6,  8))]
 
-    # create an unsatisfied edge
-    todo = [(pos, angle, feature_name, False)]
-    num_tiles = 0
-    random.seed(1)
-
-    # this loop processes one edge from the todo list.
-    while len(todo) and num_tiles < 200:
-      pos, angle, out_feature_name, in_feature_name = todo.pop()
-
-      print(tile_util.xyz_round(pos))
-
-      for i in range(4):
-        # incoming features are indexed on the feature name
-        incoming = self.incoming[out_feature_name]
-        in_sel = int(random.randrange(len(incoming)))
-
-        if self.try_tile(new_scene, todo, edges, pos, angle, incoming, in_sel):
-          break
-
-      num_tiles += 1
-
-
-
-  def get_incoming_tile_index(self, incoming, name):
-    index_return = 0 
-    for i in range(len(incoming)):
-      if name == incoming[i][1]:
-        index_return = i
-    return index_return
-
-  def in_room_range(self, shape, pos, scale):
-    for square in shape:
-      (roomCenter, size) = square
-      if ((pos[0] <= roomCenter[0]+(scale*size[0]/2) and pos[0] >= roomCenter[0]-(scale*size[0]/2)) and (pos[1] <= roomCenter[1]+(scale*size[1]/2) and pos[1] >= roomCenter[1]-(scale*size[1]/2))):
-        return True 
-    return False
-
-  def create_room(self, new_scene, feature_name):
-    # clone the tile meshes and name them after their original nodes.
-    tile_meshes = self.tile_meshes = {}
-    for name in self.tiles:
-      tile = self.tiles[name]
-      tile_mesh = tile.GetNodeAttribute()
-      tile_meshes[name] = tile_mesh.Clone(fbx.FbxObject.eDeepClone, None)
-      tile_meshes[name].SetName(name)
-
-    tileSize = 4;
-    #shape = [((2,-8,0), (4,4)),
-    #         ((2,28,0), (20,15)),
-    #         ((2,70,0), (8,8)),
-    #         ((2,28,0), (24,6))]
 
     #shape = [((2,0,0), (20,1)),
-             #((2,20,0), (20,1)),
-             #((2,40,0), (20,1)),
-             #((38,8,0), (2,4)),
-             #((-34,28,0), (2,4))]
-    shape = [((2,0,0),(10,10))]
+    #         ((2,20,0), (20,1)),
+    #         ((2,40,0), (20,1)),
+    #         ((38,8,0), (2,4)),
+    #         ((-34,28,0), (2,4))]
 
-    edges = {}
-    pos = (2,0,0)
-    angle = 0
+    #shape = [((0,0,0), (4,3))]
+    shape = self.tile_handler.snap_room_center(shape, tile_size)
 
-    # create an unsatisfied edge
-    todo = [(pos, angle, feature_name, False)]
-    num_tiles = 0
-    random.seed(1)
-
+    # Sort the shape in order of tallest square to shortest square
+    shape = sorted(shape, key = lambda tup: tup[1][2], reverse = True)
+    
     nodes = []
 
-    print("Making floor...")
-    # this loop processes one edge from the todo list.
-    # It generates the room by checking how far 
-    while len(todo) and num_tiles < 100:
-      pos, angle, out_feature_name, in_feature_name = todo.pop()
+    pos = self.tile_handler.start_position_in_shape(shape, tile_size)
+    pos = (pos[0], pos[1]-tile_size*0.5, 0)
+    edges = {}
+    angle = 0
+    # create an unsatisfied edge
+    todo = [(pos, angle, feature_name, False)]
 
-      if (not self.in_room_range(shape, tile_util.xyz_round(pos), tileSize)):
-        #print(xy_location(pos))
-        continue
-      # incoming features are indexed on the feature name
-      incoming = self.incoming[out_feature_name]
-        
-  
-      # Gets the tiles which are used on this pass
-      allowed_tiles = [int(self.get_incoming_tile_index(incoming,"Floor_2x2")),
-                       int(self.get_incoming_tile_index(incoming,"Steps_01"))]
-                       #int(self.get_incoming_tile_index(incoming,"Steps_L_Inner_01")), 
-                       #int(self.get_incoming_tile_index(incoming,"Steps_L_Inner_Curved_01")), 
-                       #int(self.get_incoming_tile_index(incoming,"Steps_L_Outer_01")), 
-                       #int(self.get_incoming_tile_index(incoming,"Steps_L_Outer_Curved01"))]
+    
+    
+    # FLOOR =================================================
+    nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, shape, None, "Floor_2x2", True)
 
-      # Picks a random tile to connect 
-      in_sel = allowed_tiles[random.randrange(len(allowed_tiles))]
+    # WALLS =================================================
+    todo = self.tile_handler.create_todo(edges, nodes)
+    nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, None, None, "Floor_Wall_4x4x4", False) 
 
-      if self.try_specific_tile(new_scene, todo, edges, pos, angle, incoming, in_sel,"Floor_Flat"):
-        in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
-        new_angle = tile_util.lim360(angle - in_rot[2])
-        tile_pos = tile_util.add3(pos, tile_util.rotateZ(tile_util.neg3(in_trans), new_angle))
-        tile_name = in_tile_name
-        nodes.append((tile_name, tile_pos, new_angle))
+    todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
+    nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, None, None, "Floor_Wall_L_4x4x4", False)
+    
+    # CEILING ==============================================
+    
+    ceilingNodes = []
+    mask = []
+    last_height = 0;
+    for i in range(len(shape)):
+      square = shape[i]
 
-      num_tiles += 1
+      if last_height > square[1][2]: 
+        (roomCenter, size) = mask[len(mask)-1]
+        size = (size[0]+2,size[1]+2,size[2]) # Make space for walls
+        mask[len(mask)-1] = ((roomCenter, size))
 
-    print("Floor Complete!")
-    print("Number of Edges", len(edges))
-        
-    print("Making walls...")
-    # Cleaning to todo list to have only wall tile tasks.
-    todo = []
-    for node in nodes:
-      (tile_name, tile_pos, new_angle) = node
-      outgoing = self.outgoing[tile_name]
-      for out_sel in range(len(outgoing)):
-        out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
-        new_pos = tile_util.add3(tile_pos, tile_util.rotateZ(out_trans, new_angle))
-        if tile_util.xyz_round(new_pos) in edges:
-          edge_pos, edge_angle, edge_feature_name, edge_satisfied = edges[tile_util.xyz_round(new_pos)]
-          if not edge_satisfied:
-            todo.append(edges[tile_util.xyz_round(new_pos)])
-          
-    print("Todo length: ", len(todo))
+      pos = self.tile_handler.start_position_in_shape([square], tile_size)
+      pos = (pos[0], pos[1] - tile_size * 0.5, tile_size * square[1][2])
+      angle = 0
+      edges = {}
+      todo = [(pos, angle, "Ceiling_Flat", False)]
 
-    # Make a copy of the todo list <-- these current entries are guarantied to be walls
-    # Todo will change as we create the wall tiles so we need to make a copy of this wall list
-    unsatisfiedWalls = []
-    for wall in todo:
-      unsatisfiedWalls.append(wall)
-
-    while len(unsatisfiedWalls):
-      pos, angle, out_feature_name, in_feature_name = unsatisfiedWalls.pop()
-      incoming = self.incoming[out_feature_name]
+      ceilingNodes = self.tile_handler.complete_todo(new_scene, todo, edges, ceilingNodes, [square], mask, "Ceiling_Floor_2x2", True)
       
-           # Gets the tiles which are used on this pass
-      allowed_tiles = [int(self.get_incoming_tile_index(incoming,"Floor_Wall_T_4x4x4")),
-                       int(self.get_incoming_tile_index(incoming,"Floor_Wall_X_4x4x4")), 
-                       int(self.get_incoming_tile_index(incoming,"Floor_Wall_L_4x4x4")), 
-                       int(self.get_incoming_tile_index(incoming,"Floor_Wall_End_4x4x4")),
-                       int(self.get_incoming_tile_index(incoming,"Floor_Wall_4x4x4"))]
+      mask.append(square)
 
-      # Picks a random tile to connect 
-      in_sel = allowed_tiles[random.randrange(len(allowed_tiles))]
+      last_height = square[1][2]
 
-     # in_sel = int(self.get_incoming_tile_index(incoming, "Wall_01"))
+    nodes = nodes + ceilingNodes # Concatinate the arrays (lists)
 
-      if self.try_tile(new_scene, todo, edges, pos, angle, incoming, in_sel):
-        in_feature_name, in_tile_name, in_trans, in_rot = incoming[in_sel]
-        new_angle = tile_util.lim360(angle - in_rot[2])
-        tile_pos = tile_util.add3(pos, tile_util.rotateZ(tile_util.neg3(in_trans), new_angle))
-        tile_name = in_tile_name
-        nodes.append((tile_name, tile_pos, new_angle))
-          
-    print("Walls Complete!")
+    print("Room Generation complete with ", len(nodes), " tiles")
 
-    print("Total Nodes: ", len(nodes))
-    # This takes all the nodes and sends them to the FXB output.
-    for node in nodes:
-      (tile_name, tile_pos, new_angle) = node
-      self.make_node(new_scene, tile_name, tile_pos, new_angle)
+    return nodes
 
 
     
-
-
 
