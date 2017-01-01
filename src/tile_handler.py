@@ -139,6 +139,15 @@ class tile_handler:
     return True
   ## ======== END try_tile
 
+  def snap_to_edge(self, pos, grid_size):
+    if not pos[0] % grid_size[0] == 0:
+      pos = (pos[0] - pos[0] % grid_size[0], pos[1], pos[2])
+    if not pos[1] % grid_size[1] == 0:
+      pos = (pos[0], pos[1] - pos[1] % grid_size[1], pos[2])
+    if not pos[2] % grid_size[2] == 0:
+      pos = (pos[0], pos[1], pos[2] - pos[2] % grid_size[2])
+    return pos
+
   def snap_room_center(self, shape, scale):
     for i in range(len(shape)):
       (roomCenter, size) = shape[i]
