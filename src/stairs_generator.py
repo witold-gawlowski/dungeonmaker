@@ -28,28 +28,42 @@ class stairs_generator:
     door_A_pos = self.tile_handler.snap_to_edge(door_A_pos, grid_size)
     door_B_pos = (0,10,0)
     door_B_pos = self.tile_handler.snap_to_edge(door_B_pos, grid_size)
-    # DOORS ===============================================
-    #todo = [(door_A_pos, 0,", False)]
-
-
+    
     
     nodes = []
+    #pos = self.tile_handler.start_position_in_shape(shape, tile_size)
+    #pos = (pos[0], pos[1]-tile_size*0.5, 0)
+    edges = {}
+    angle = 0
+    # create an unsatisfied edge
+    #todo = [(pos, angle, feature_name, False)]
 
+    # DOORS ===============================================
+    
+    todo = [(door_A_pos, angle,"Floor_Flat", False)]
+    nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, shape, None, "Doorway_narrow_02", False)
+    
+    todo = [(door_B_pos, angle,"Floor_Flat", False)]
+    nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, shape, None, "Doorway_narrow_02", False)
+    
+
+    #nodes = []
     pos = self.tile_handler.start_position_in_shape(shape, tile_size)
     pos = (pos[0], pos[1]-tile_size*0.5, 0)
     edges = {}
     angle = 0
+
     # create an unsatisfied edge
     todo = [(pos, angle, feature_name, False)]
 
     #
     
     # FLOOR =================================================
-    nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, shape, None, "Floor_2x2", True)
+    #nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, shape, None, "Floor_2x2", True)
 
     # WALLS =================================================
     todo = self.tile_handler.create_todo(edges, nodes,["Floor_Flat"])
-    nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, None, None, "Floor_Wall_4x4x4", False) 
+    #nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, None, None, "Floor_Wall_4x4x4", False) 
 
     #todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
     #nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, None, None, "Floor_Wall_L_4x4x4", False)
