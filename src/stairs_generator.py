@@ -26,7 +26,7 @@ class stairs_generator:
 
     door_A_pos = (0,0,0)
     door_A_pos = self.tile_handler.snap_to_edge(door_A_pos, grid_size)
-    door_B_pos = (0,10,0)
+    door_B_pos = (15,30,0)
     door_B_pos = self.tile_handler.snap_to_edge(door_B_pos, grid_size)
     
     start_pos = self.tile_handler.snap_grid_center(door_A_pos,grid_size)
@@ -36,17 +36,25 @@ class stairs_generator:
     closed = []
     current_pos = start_pos
     closed.append(current_pos)
-    self.tile_handler.get_surrounding_pos(open, current_pos, grid_size, start_pos, end_pos) 
-    
+
     # get lowest f_cost 
     #current_pos = min(open, key=lambda L: L[1][2])
     
-    # Sorts by F_cost then by H_cost
-    open = sorted(open, key=lambda L: (L[1][2],L[1][1]))
+    #while current_pos is not end_pos:
+    while not (current_pos[0] == end_pos[0] and current_pos[1] == end_pos[1]):
+      self.tile_handler.get_surrounding_pos(open, current_pos, grid_size, start_pos, end_pos) 
+   
+      
+      # Sorts by F_cost then by H_cost
+      open = sorted(open, key=lambda L: (L[1][2],L[1][1]))
+
+      current_pos = open[0][0]
+      open.pop(0)
+      closed.append(current_pos)
     
-    current_pos = open[0][0]
-    closed.append(current_pos)
-    self.tile_handler.get_surrounding_pos(open, current_pos, grid_size, start_pos, end_pos) 
+      
+      
+    #self.tile_handler.get_surrounding_pos(open, current_pos, grid_size, start_pos, end_pos) 
 
     for i in range(len(closed)):
       shape.append((closed[i],(1,1,0.25)))
