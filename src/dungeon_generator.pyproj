@@ -22,6 +22,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="chamber_generator.py" />
+    <Compile Include="dungeon_generator.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="fbx_io.py">
       <SubType>Code</SubType>
     </Compile>
@@ -40,9 +43,6 @@
     <Folder Include="scenes\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="scenes\components.blend" />
-    <Content Include="scenes\components.fbx" />
-    <Content Include="scenes\modular2.fbx" />
     <Content Include="scenes\result.fbx" />
   </ItemGroup>
   <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />

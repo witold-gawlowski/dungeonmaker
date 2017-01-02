@@ -1,4 +1,5 @@
 import chamber_generator
+import dungeon_generator
 import fbx_io
 
 if __name__ == '__main__':
@@ -11,12 +12,18 @@ if __name__ == '__main__':
   scene = fbx_file_io.create_scene("FBX ascii")
 
   # Initialise rooms and stairs generators (to be used in the algorythm bellow)
-  chamber = chamber_generator.chamber_generator(top_level)
+  chamber_generator_instance = chamber_generator.chamber_generator(top_level)
+
+  # Initialise the dungeon_generator
+  dungeon_generator_instance = dungeon_generator.dungeon_generator(scene)
+
+  # From what i undestand I'd be changing below line of code to:
+  # nodes = dungeon_generator_instance.generate()
 
   # Algorithm to stitch rooms together
   # Each room is returned as an array of "nodes" (tile instances)
   # all these array's of nodes will be needed to write the fbx output
-  nodes = chamber.generate_chamber(scene)
+  nodes = chamber_generator_instance.generate_chamber(scene)
 
   # This takes all the nodes and sends them to the FXB output.
   for node in nodes:
