@@ -18,11 +18,11 @@ class stairs_generator:
 
     tile_size = 4;
    
-    shape = [((0,0,0), (4,3, 4))]
+    shape = []
 
-    shape = self.tile_handler.snap_room_center(shape, tile_size)
+    #shape = self.tile_handler.snap_room_center(shape, tile_size)
 
-    grid_size = (4,1,4)
+    grid_size = (4,4,1)
 
     door_A_pos = (0,0,0)
     door_A_pos = self.tile_handler.snap_to_edge(door_A_pos, grid_size)
@@ -30,39 +30,74 @@ class stairs_generator:
     door_B_pos = self.tile_handler.snap_to_edge(door_B_pos, grid_size)
     
     start_pos = self.tile_handler.snap_grid_center(door_A_pos,grid_size)
-    g_cost = self.tile_handler.get_distance(door_A_pos,start_pos)
-    h_cost = self.tile_handler.get_distance(start_pos, door_B_pos)
-    f_cost = self.tile_handler.add_tuple3(g_cost,h_cost)
-    check_tile = (start_pos,(g_cost, h_cost, f_cost))
-    grid_tiles = []
-    grid_tiles.append(check_tile)
+    end_pos = self.tile_handler.snap_grid_center(door_B_pos,grid_size)
 
+    open = []
+    closed = []
+    current_pos = start_pos
+    closed.append(current_pos)
+    self.tile_handler.get_surrounding_pos(open, current_pos, grid_size, start_pos, end_pos) 
     
+    # get lowest f_cost 
+    #current_pos = min(open, key=lambda L: L[1][2])
+    
+    # Sorts by F_cost then by H_cost
+    open = sorted(open, key=lambda L: (L[1][2],L[1][1]))
+    
+    current_pos = open[0][0]
+    closed.append(current_pos)
+    self.tile_handler.get_surrounding_pos(open, current_pos, grid_size, start_pos, end_pos) 
+
+    for i in range(len(closed)):
+      shape.append((closed[i],(1,1,0.25)))
+
+
+    #grid_tiles = []
+    #grid_tiles.append(check_tile)
+
+
     nodes = []
-    #pos = self.tile_handler.start_position_in_shape(shape, tile_size)
-    #pos = (pos[0], pos[1]-tile_size*0.5, 0)
+    pos = self.tile_handler.start_position_in_shape(shape, tile_size)
+    pos = (pos[0], pos[1]-tile_size*0.5, 0)
     edges = {}
     angle = 0
+    
+    # create an unsatisfied edge
+    todo = [(pos, angle, feature_name, False)]
+    
+    # FLOOR =================================================
+    nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, shape, None, "Floor_2x2", True)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     # create an unsatisfied edge
     #todo = [(pos, angle, feature_name, False)]
 
     # DOORS ===============================================
     
-    todo = [(door_A_pos, angle,"Floor_Flat", False)]
-    nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, shape, None, "Doorway_narrow_02", False)
+    #todo = [(door_A_pos, angle,"Floor_Flat", False)]
+    #nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, shape, None, "Doorway_narrow_02", False)
     
-    todo = [(door_B_pos, angle,"Floor_Flat", False)]
-    nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, shape, None, "Doorway_narrow_02", False)
+    #todo = [(door_B_pos, angle,"Floor_Flat", False)]
+    #nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, shape, None, "Doorway_narrow_02", False)
     
 
     #nodes = []
-    pos = self.tile_handler.start_position_in_shape(shape, tile_size)
-    pos = (pos[0], pos[1]-tile_size*0.5, 0)
-    edges = {}
-    angle = 0
+    #pos = self.tile_handler.start_position_in_shape(shape, tile_size)
+    #pos = (pos[0], pos[1]-tile_size*0.5, 0)
+    #edges = {}
+    #angle = 0
 
     # create an unsatisfied edge
-    todo = [(pos, angle, feature_name, False)]
+    #todo = [(pos, angle, feature_name, False)]
 
     #
     
@@ -70,7 +105,7 @@ class stairs_generator:
     #nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, shape, None, "Floor_2x2", True)
 
     # WALLS =================================================
-    todo = self.tile_handler.create_todo(edges, nodes,["Floor_Flat"])
+    #todo = self.tile_handler.create_todo(edges, nodes,["Floor_Flat"])
     #nodes = self.tile_handler.complete_todo(new_scene, todo, edges, nodes, None, None, "Floor_Wall_4x4x4", False) 
 
     #todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])

@@ -150,15 +150,14 @@ class tile_handler:
     y_dist = pointB[1] - pointA[1]
     z_dist = pointB[2] - pointA[2]
     distance = (x_dist, y_dist, z_dist)
-    return distance
-
-  def add_tuple3(self, vA, vB):
-    return (vA[0]+vB[0], vA[1]+vB[1], vA[2]+vB[2])
-
+    return x_dist + y_dist + z_dist
+  ## ======== END get_distance
+  
   def snap_grid_center(self, pos, grid_size):
     pos = ((pos[0] + grid_size[0]*0.5), (pos[1] + grid_size[1]*0.5),pos[2])
     return pos
-
+  ## ======== END add_tuple3
+  
   def snap_to_edge(self, pos, grid_size):
     if not pos[0] % grid_size[0] == 0:
       pos = (pos[0] - pos[0] % grid_size[0], pos[1], pos[2])
@@ -167,6 +166,34 @@ class tile_handler:
     if not pos[2] % grid_size[2] == 0:
       pos = (pos[0], pos[1], pos[2] - pos[2] % grid_size[2])
     return pos
+  ## ======== END snap_to_edge
+  
+  def calc_ghf_cost(self, start, end, current):
+    g_cost = self.get_distance(start,current)
+    h_cost = self.get_distance(current, end)
+    f_cost = g_cost + h_cost
+    return (g_cost, h_cost, f_cost)
+  ## ======== END calc_ghf_cost
+
+  def get_surrounding_pos(self, open, current, grid_size, start, end):
+    # forwards
+    ## ADD IF OPEN OR CLOSED HAS IT CHECK THE GHF COSTS
+    for_pos = (current[0],current[1]+grid_size[1],current[2])
+    open.append((for_pos,self.calc_ghf_cost(start, end, for_pos)))
+    
+    # behind
+    beh_pos = (current[0], current[1]-grid_size[1], current[2])
+    open.append((beh_pos,self.calc_ghf_cost(start,end,beh_pos)))
+    
+    # left 
+    lef_pos = (current[0]-grid_size[0],current[1], current[2])
+    open.append((lef_pos, self.calc_ghf_cost(start,end,lef_pos)))
+    
+    # right
+    rig_pos = (current[0]+grid_size[0],current[1], current[2])
+    open.append((rig_pos, self.calc_ghf_cost(start,end,rig_pos)))
+
+    return open
 
   def snap_room_center(self, shape, scale):
     for i in range(len(shape)):
