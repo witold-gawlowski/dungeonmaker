@@ -144,6 +144,20 @@ class tile_handler:
     #print("pass")
     return True
   ## ======== END try_tile
+  
+  def get_distance(self, pointA, pointB):
+    x_dist = pointB[0] - pointA[0]
+    y_dist = pointB[1] - pointA[1]
+    z_dist = pointB[2] - pointA[2]
+    distance = (x_dist, y_dist, z_dist)
+    return distance
+
+  def add_tuple3(self, vA, vB):
+    return (vA[0]+vB[0], vA[1]+vB[1], vA[2]+vB[2])
+
+  def snap_grid_center(self, pos, grid_size):
+    pos = ((pos[0] + grid_size[0]*0.5), (pos[1] + grid_size[1]*0.5),pos[2])
+    return pos
 
   def snap_to_edge(self, pos, grid_size):
     if not pos[0] % grid_size[0] == 0:

@@ -22,13 +22,21 @@ class stairs_generator:
 
     shape = self.tile_handler.snap_room_center(shape, tile_size)
 
-    grid_size = (4,1,2)
+    grid_size = (4,1,4)
 
     door_A_pos = (0,0,0)
     door_A_pos = self.tile_handler.snap_to_edge(door_A_pos, grid_size)
     door_B_pos = (0,10,0)
     door_B_pos = self.tile_handler.snap_to_edge(door_B_pos, grid_size)
     
+    start_pos = self.tile_handler.snap_grid_center(door_A_pos,grid_size)
+    g_cost = self.tile_handler.get_distance(door_A_pos,start_pos)
+    h_cost = self.tile_handler.get_distance(start_pos, door_B_pos)
+    f_cost = self.tile_handler.add_tuple3(g_cost,h_cost)
+    check_tile = (start_pos,(g_cost, h_cost, f_cost))
+    grid_tiles = []
+    grid_tiles.append(check_tile)
+
     
     nodes = []
     #pos = self.tile_handler.start_position_in_shape(shape, tile_size)
