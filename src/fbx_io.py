@@ -8,6 +8,7 @@ class fbx_io:
     
     self.io_settings = fbx.FbxIOSettings.Create(self.sdk_manager, fbx.IOSROOT)
     self.sdk_manager.SetIOSettings(self.io_settings)
+    self.tiles = {}
 
   def import_file(self, file_name):
     importer = fbx.FbxImporter.Create(self.sdk_manager, "")    
@@ -21,7 +22,7 @@ class fbx_io:
     root = self.components.GetRootNode()
     top_level = [root.GetChild(i) for i in range(root.GetChildCount())]
 
-    tiles = self.tiles = {}
+    tiles = self.tiles
     for node in top_level:
       if node.GetChildCount():
         # for each tile, check the names of the connectors
@@ -37,6 +38,8 @@ class fbx_io:
       if name in desc:
         return idx
     return -1
+
+
 
   # file_type can be either "FBX binary" or "FBX ascii"
   # Output name is default "result"
