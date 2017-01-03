@@ -29,6 +29,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="main.py" />
+    <Compile Include="utils.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="room_generator.py" />
     <Compile Include="stairs_generator.py">
       <SubType>Code</SubType>
