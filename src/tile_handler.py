@@ -177,8 +177,8 @@ class tile_handler:
   ## ======== END snap_to_edge
   
   def calc_ghf_cost(self, start, end, current):
-    g_cost = self.get_distance(start,current)
-    h_cost = self.get_distance(current, end)
+    g_cost = abs(self.get_distance(start,current))
+    h_cost = abs(self.get_distance(current, end))
     f_cost = g_cost + h_cost
     return (g_cost, h_cost, f_cost)
   ## ======== END calc_ghf_cost
