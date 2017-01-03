@@ -16,18 +16,14 @@ class dungeon_generator(object):
     
     print ( "snap and add to result_scene" )
     for node_name, node in self.fbx_manager.tiles.items():
-      print ( "node_name: " + node_name )
-      if node_name.startswith ( "PrecreatedChamber" ):
-        doors = [ node.GetChild ( i ) for i in range ( node.GetChildCount () ) ]
-        for d in doors:
-          utils.snap_to_parent_grid ( d )
-          print ( d.GetName() )
-          result_nodes.append ( ( d.GetName(),
-                               d.LclTranslation.Get(),
-                               d.LclRotation.Get() ) )
+      if node_name.startswith ( "Doors" ):
         utils.snap_to_parent_grid ( node )
-        print ( node.GetName() )
-        result_nodes.append ( ( node.GetName(),
-                               node.LclTranslation.Get(),
-                               node.LclRotation.Get() ) ) 
+        print ("door: " + node.GetName() )
+        result_nodes.append ( ( node.GetName(), node.LclTranslation.Get(), node.LclRotation.Get() ) )
+
+    for node_name, node in self.fbx_manager.tiles.items():
+      if node_name.startswith ( "PrecreatedRoom" ):
+        utils.snap_to_parent_grid ( node )
+        print ( "room: " + node.GetName() + " " + node_name)
+        result_nodes.append ( ( node.GetName(), node.LclTranslation.Get(), node.LclRotation.Get() ) ) 
     return result_nodes

@@ -1,4 +1,5 @@
 import fbx
+import utils
 
 class fbx_io:
   def __init__(self):  
@@ -25,8 +26,9 @@ class fbx_io:
     tiles = self.tiles
     for node in top_level:
       if node.GetChildCount():
-        # for each tile, check the names of the connectors
-        tiles[node.GetName()] = node;
+        for subnode in utils.node_iterator( node ):
+          print ( "reading nodes: " + subnode.GetName() )
+          tiles[ subnode.GetName() ] = subnode;
 
     return top_level
 
@@ -69,6 +71,6 @@ class fbx_io:
     dest_node = fbx.FbxNode.Create( scene, node_name )
     dest_node.SetNodeAttribute(self.tile_meshes[node_name])
     dest_node.LclTranslation.Set(fbx.FbxDouble3(pos[0], pos[1], pos[2]))
-    dest_node.LclRotation.Set(fbx.FbxDouble3(0, 0, angle))
+    dest_node.LclRotation.Set(fbx.FbxDouble3(angle[0], angle[1], angle[2]))
     root = scene.GetRootNode()
     root.AddChild(dest_node)
