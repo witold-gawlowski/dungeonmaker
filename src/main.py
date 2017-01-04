@@ -7,21 +7,22 @@ if __name__ == '__main__':
   # Read input
   fbx_file_io = fbx_io.fbx_io()
   top_level = fbx_file_io.import_file ( "components8" )
-  input_scene = fbx_file_io.import_file ( "worldfile" )
  
   # Create a scene for scene objects to be attached to
-  scene = fbx_file_io.create_scene("FBX binary")
+  scene = fbx_file_io.create_scene("FBX ascii")
+
+
 
   # Initialise rooms and stairs generators (to be used in the algorythm bellow)
   chamber_generator_instance = chamber_generator.chamber_generator(top_level)
 
   # Initialise the dungeon_generator
-  dungeon_generator_instance = dungeon_generator.dungeon_generator(chamber_generator_instance, fbx_file_io)
+  dungeon_generator_instance = dungeon_generator.dungeon_generator(chamber_generator_instance, fbx_file_io, scene, "worldfile")
 
   # Algorithm to stitch rooms together
   # Each room is returned as an array of "nodes" (tile instances)
   # all these array's of nodes will be needed to write the fbx output
-  nodes = dungeon_generator_instance.generate(scene)
+  nodes = dungeon_generator_instance.generate()
 
   # This takes all the nodes and sends them to the FXB output.
   for node in nodes:

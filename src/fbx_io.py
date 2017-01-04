@@ -11,7 +11,18 @@ class fbx_io:
     self.sdk_manager.SetIOSettings(self.io_settings)
     self.tiles = {}
 
-  def import_file(self, file_name):
+  def import_components_file(self, file_name):
+    temp = import_file(self, file_name)
+    add_tiles(self, temp)
+  
+  def add_tiles(self, top_level):
+    tiles = self.tiles
+    for node in top_level:
+      if node.GetChildCount():
+        for subnode in utils.node_iterator( node ):
+          tiles[ subnode.GetName() ] = subnode;
+
+  def import_file(self, file_name, top_level_only = True):
     importer = fbx.FbxImporter.Create(self.sdk_manager, "")    
     result = importer.Initialize("scenes/"+file_name+".fbx", -1, self.io_settings)
     if not result:
@@ -21,16 +32,13 @@ class fbx_io:
     importer.Destroy()
 
     root = self.components.GetRootNode()
-    top_level = [root.GetChild(i) for i in range(root.GetChildCount())]
-
-    tiles = self.tiles
-    for node in top_level:
-      if node.GetChildCount():
-        for subnode in utils.node_iterator( node ):
-          print ( "reading nodes: " + subnode.GetName() )
-          tiles[ subnode.GetName() ] = subnode;
-
-    return top_level
+    if top_level_only:
+      objects = [root.GetChild(i) for i in range(root.GetChildCount())]
+    else:
+      objects = [node for node in utils.node_iterator(root)]
+    for node in objects:
+      print (str(node.LclTranslation.Get()[0]) + " " + str( node.LclTranslation.Get()[1]) + " " + str(node.LclTranslation.Get()[2]))
+    return objects
 
   def get_format(self, name):
     reg = self.sdk_manager.GetIOPluginRegistry()
