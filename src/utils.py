@@ -9,8 +9,10 @@ def node_iterator( root ):
     yield from node_iterator( c )
 
 def snap_to_parent_grid( node ):
-  # node.LclTranslation.Set( fbx.FbxDouble3( 0, 0, 0 ) )
-  1
+  pos = node.LclTranslation.Get()
+  pos = map(round, pos)
+  node.LclTranslation.Set( fbx.FbxDouble3( *pos ) )
+  return node
 
 def scene_to_list( scene ):
   root = scene.GetRootNode()

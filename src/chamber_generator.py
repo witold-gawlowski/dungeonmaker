@@ -12,6 +12,6 @@ class chamber_generator:
         
   
   def generate_chamber(self, scene):
-    #cg = self.rg.create_room(scene, "Floor_Flat")
-    cg = self.sg.create_stairs(scene,"Floor_Flat")
+    cg = self.rg.create_room(scene, "Floor_Flat")
+    # cg = self.sg.create_stairs(scene,"Floor_Flat")
     return cg

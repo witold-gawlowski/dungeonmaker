@@ -11,10 +11,6 @@ class fbx_io:
     self.sdk_manager.SetIOSettings(self.io_settings)
     self.tiles = {}
 
-  def import_components_file(self, file_name):
-    temp = import_file(self, file_name)
-    add_tiles(self, temp)
-  
   def add_tiles(self, top_level):
     tiles = self.tiles
     for node in top_level:
@@ -22,7 +18,14 @@ class fbx_io:
         for subnode in utils.node_iterator( node ):
           tiles[ subnode.GetName() ] = subnode;
 
-  def import_file(self, file_name, top_level_only = True):
+  def import_components_file(self, file_name):
+    temp = self.import_file( file_name)
+    self.add_tiles( temp )
+    return temp
+  
+ 
+
+  def import_file( self, file_name ):
     importer = fbx.FbxImporter.Create(self.sdk_manager, "")    
     result = importer.Initialize("scenes/"+file_name+".fbx", -1, self.io_settings)
     if not result:
@@ -32,12 +35,7 @@ class fbx_io:
     importer.Destroy()
 
     root = self.components.GetRootNode()
-    if top_level_only:
-      objects = [root.GetChild(i) for i in range(root.GetChildCount())]
-    else:
-      objects = [node for node in utils.node_iterator(root)]
-    for node in objects:
-      print (str(node.LclTranslation.Get()[0]) + " " + str( node.LclTranslation.Get()[1]) + " " + str(node.LclTranslation.Get()[2]))
+    objects = [root.GetChild(i) for i in range(root.GetChildCount())]
     return objects
 
   def get_format(self, name):
@@ -79,6 +77,6 @@ class fbx_io:
     dest_node = fbx.FbxNode.Create( scene, node_name )
     dest_node.SetNodeAttribute(self.tile_meshes[node_name])
     dest_node.LclTranslation.Set(fbx.FbxDouble3(pos[0], pos[1], pos[2]))
-    dest_node.LclRotation.Set(fbx.FbxDouble3(angle[0], angle[1], angle[2]))
+    dest_node.LclRotation.Set(fbx.FbxDouble3(0, 0, angle))
     root = scene.GetRootNode()
     root.AddChild(dest_node)
