@@ -1,4 +1,5 @@
 import fbx
+import utils
 
 class fbx_io:
   def __init__(self):  
@@ -8,8 +9,23 @@ class fbx_io:
     
     self.io_settings = fbx.FbxIOSettings.Create(self.sdk_manager, fbx.IOSROOT)
     self.sdk_manager.SetIOSettings(self.io_settings)
+    self.tiles = {}
 
-  def import_file(self, file_name):
+  def add_tiles(self, top_level):
+    tiles = self.tiles
+    for node in top_level:
+      if node.GetChildCount():
+        for subnode in utils.node_iterator( node ):
+          tiles[ subnode.GetName() ] = subnode;
+
+  def import_components_file(self, file_name):
+    temp = self.import_file( file_name)
+    self.add_tiles( temp )
+    return temp
+  
+ 
+
+  def import_file( self, file_name ):
     importer = fbx.FbxImporter.Create(self.sdk_manager, "")    
     result = importer.Initialize("scenes/"+file_name+".fbx", -1, self.io_settings)
     if not result:
@@ -19,15 +35,8 @@ class fbx_io:
     importer.Destroy()
 
     root = self.components.GetRootNode()
-    top_level = [root.GetChild(i) for i in range(root.GetChildCount())]
-
-    tiles = self.tiles = {}
-    for node in top_level:
-      if node.GetChildCount():
-        # for each tile, check the names of the connectors
-        tiles[node.GetName()] = node;
-
-    return top_level
+    objects = [root.GetChild(i) for i in range(root.GetChildCount())]
+    return objects
 
   def get_format(self, name):
     reg = self.sdk_manager.GetIOPluginRegistry()
@@ -37,6 +46,8 @@ class fbx_io:
       if name in desc:
         return idx
     return -1
+
+
 
   # file_type can be either "FBX binary" or "FBX ascii"
   # Output name is default "result"
