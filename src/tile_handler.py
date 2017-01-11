@@ -183,24 +183,31 @@ class tile_handler:
     return (g_cost, h_cost, f_cost)
   ## ======== END calc_ghf_cost
 
-  def get_surrounding_pos(self, open, current, grid_size, start, end):
+  def get_surrounding_pos(self, open, closed, current, grid_size, start, end):
     # forwards
     ## ADD IF OPEN OR CLOSED HAS IT CHECK THE GHF COSTS
-    test = current
-    for_pos = (current[0][0],current[0][1]+grid_size[1],current[0][2])
-    open.append((for_pos,self.calc_ghf_cost(start, end, for_pos), current[0]))
+    for_pos = ((current[0][0],current[0][1]+grid_size[1],current[0][2]),self.calc_ghf_cost(start, end, for_pos), current[0])
+    for c in closed: 
+      #check to see if there is a tile at that location
+      if not c[0][0] == for_pos[0][0] and c[0][1] == for_pos[0][1] and c[0][2] == for_pos[0][2]:
+        open.append(for_pos)
+    
+        
+        
+    #for_pos = (current[0][0],current[0][1]+grid_size[1],current[0][2])
+    #open.append((for_pos,self.calc_ghf_cost(start, end, for_pos), current[0]))
     
     # behind
-    beh_pos = (current[0][0], current[0][1]-grid_size[1], current[0][2])
-    open.append((beh_pos,self.calc_ghf_cost(start,end,beh_pos), current[0]))
+    #beh_pos = (current[0][0], current[0][1]-grid_size[1], current[0][2])
+    #open.append((beh_pos,self.calc_ghf_cost(start,end,beh_pos), current[0]))
     
     # left 
-    lef_pos = (current[0][0]-grid_size[0],current[0][1], current[0][2])
-    open.append((lef_pos, self.calc_ghf_cost(start,end,lef_pos),current[0]))
+    #lef_pos = (current[0][0]-grid_size[0],current[0][1], current[0][2])
+    #open.append((lef_pos, self.calc_ghf_cost(start,end,lef_pos),current[0]))
     
     # right
-    rig_pos = (current[0][0]+grid_size[0],current[0][1], current[0][2])
-    open.append((rig_pos, self.calc_ghf_cost(start,end,rig_pos),current[0]))
+    #rig_pos = (current[0][0]+grid_size[0],current[0][1], current[0][2])
+    #open.append((rig_pos, self.calc_ghf_cost(start,end,rig_pos),current[0]))
 
     return open
 

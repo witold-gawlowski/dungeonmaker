@@ -26,7 +26,7 @@ class stairs_generator:
 
     door_A_pos = (0,0,0)
     door_A_pos = self.tile_handler.snap_to_edge(door_A_pos, grid_size)
-    door_B_pos = (0,30,0)
+    door_B_pos = (10,30,0)
     door_B_pos = self.tile_handler.snap_to_edge(door_B_pos, grid_size)
     
 
@@ -44,7 +44,7 @@ class stairs_generator:
     
     #while current_pos is not end_pos:
     while not (current_pos[0][0] == end_pos[0][0] and current_pos[0][1] == end_pos[0][1]):
-      self.tile_handler.get_surrounding_pos(open, current_pos, grid_size, start_pos[0], end_pos[0]) 
+      self.tile_handler.get_surrounding_pos(open, closed, current_pos, grid_size, start_pos[0], end_pos[0]) 
    
       
       # Sorts by F_cost then by H_cost
