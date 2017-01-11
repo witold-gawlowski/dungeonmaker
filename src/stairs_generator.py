@@ -26,7 +26,7 @@ class stairs_generator:
 
     door_A_pos = (0,0,0)
     door_A_pos = self.tile_handler.snap_to_edge(door_A_pos, grid_size)
-    door_B_pos = (6,6,0)
+    door_B_pos = (10,14,0)
     door_B_pos = self.tile_handler.snap_to_edge(door_B_pos, grid_size)
     
 
@@ -50,14 +50,8 @@ class stairs_generator:
       
       # Sorts by F_cost then by H_cost
       # open = sorted(open, key=lambda L: (L[1][2],L[1][1]))
-      print("Before")
-      for o in open:
-        print(o)
-      open = sorted(open, key=lambda L: (L[1][2],L[1][1]))
 
-      print("After")
-      for o in open:
-        print(o)
+      open = sorted(open, key=lambda L: (L[1][2],L[1][1], L[0][1]))
 
 
       current_pos = open[0]
