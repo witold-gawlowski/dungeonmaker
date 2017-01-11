@@ -186,28 +186,53 @@ class tile_handler:
   def get_surrounding_pos(self, open, closed, current, grid_size, start, end):
     # forwards
     ## ADD IF OPEN OR CLOSED HAS IT CHECK THE GHF COSTS
-    for_pos = ((current[0][0],current[0][1]+grid_size[1],current[0][2]),self.calc_ghf_cost(start, end, for_pos), current[0])
-    for c in closed: 
+    for_pos = (current[0][0], current[0][1]+grid_size[1], current[0][2])
+    for_struct =(for_pos,self.calc_ghf_cost(start, end, for_pos), current[0])
+    for index, c in enumerate(closed,start=0): 
       #check to see if there is a tile at that location
-      if not c[0][0] == for_pos[0][0] and c[0][1] == for_pos[0][1] and c[0][2] == for_pos[0][2]:
-        open.append(for_pos)
-    
-        
-        
-    #for_pos = (current[0][0],current[0][1]+grid_size[1],current[0][2])
-    #open.append((for_pos,self.calc_ghf_cost(start, end, for_pos), current[0]))
+      if not c[0][0] == for_struct[0][0] and c[0][1] == for_struct[0][1] and c[0][2] == for_struct[0][2]:
+        #if c[1][2] > for_struct[1][2]:
+         # closed.append(for_struct)
+          #closed.pop(index)
+      #else:
+        open.append(for_struct)
     
     # behind
-    #beh_pos = (current[0][0], current[0][1]-grid_size[1], current[0][2])
-    #open.append((beh_pos,self.calc_ghf_cost(start,end,beh_pos), current[0]))
-    
+    beh_pos = (current[0][0], current[0][1]-grid_size[1], current[0][2])
+    beh_struct =(beh_pos,self.calc_ghf_cost(start, end, beh_pos), current[0])
+    for index, c in enumerate(closed,start=0): 
+      #check to see if there is a tile at that location
+      if c[0][0] == beh_struct[0][0] and c[0][1] == beh_struct[0][1] and c[0][2] == beh_struct[0][2]:
+        if c[1][2] > beh_struct[1][2]:
+          closed.append(beh_struct)
+          closed.pop(index)
+      else:
+        open.append(beh_struct)
+        
     # left 
-    #lef_pos = (current[0][0]-grid_size[0],current[0][1], current[0][2])
-    #open.append((lef_pos, self.calc_ghf_cost(start,end,lef_pos),current[0]))
-    
+    lef_pos = (current[0][0]-grid_size[0], current[0][1], current[0][2])
+    lef_struct =(lef_pos,self.calc_ghf_cost(start, end, lef_pos), current[0])
+    for index, c in enumerate(closed,start=0): 
+      #check to see if there is a tile at that location
+      if c[0][0] == lef_struct[0][0] and c[0][1] == lef_struct[0][1] and c[0][2] == lef_struct[0][2]:
+        if c[1][2] > lef_struct[1][2]:
+          closed.append(lef_struct)
+          closed.pop(index)
+      else:
+        open.append(lef_struct)
+
     # right
-    #rig_pos = (current[0][0]+grid_size[0],current[0][1], current[0][2])
-    #open.append((rig_pos, self.calc_ghf_cost(start,end,rig_pos),current[0]))
+    rig_pos = (current[0][0]+grid_size[0],current[0][1], current[0][2])
+    rig_struct =(rig_pos,self.calc_ghf_cost(start, end, rig_pos), current[0])
+    for index, c in enumerate(closed,start=0): 
+      #check to see if there is a tile at that location
+      if c[0][0] == rig_struct[0][0] and c[0][1] == rig_struct[0][1] and c[0][2] == rig_struct[0][2]:
+        if c[1][2] > rig_struct[1][2]:
+          closed.append(rig_struct)
+          closed.pop(index)
+      else:
+        open.append(rig_struct)
+
 
     return open
 

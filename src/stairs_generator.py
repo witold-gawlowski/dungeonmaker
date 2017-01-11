@@ -14,7 +14,7 @@ class stairs_generator:
 
 
   def create_stairs(self, new_scene, feature_name):
-    print("Creating room ... ")
+    print("Finding Path ... ")
 
     tile_size = 4;
    
@@ -26,7 +26,7 @@ class stairs_generator:
 
     door_A_pos = (0,0,0)
     door_A_pos = self.tile_handler.snap_to_edge(door_A_pos, grid_size)
-    door_B_pos = (10,30,0)
+    door_B_pos = (6,6,0)
     door_B_pos = self.tile_handler.snap_to_edge(door_B_pos, grid_size)
     
 
@@ -44,19 +44,30 @@ class stairs_generator:
     
     #while current_pos is not end_pos:
     while not (current_pos[0][0] == end_pos[0][0] and current_pos[0][1] == end_pos[0][1]):
+      #print = current_pos[0] +end_pos[
       self.tile_handler.get_surrounding_pos(open, closed, current_pos, grid_size, start_pos[0], end_pos[0]) 
    
       
       # Sorts by F_cost then by H_cost
+      # open = sorted(open, key=lambda L: (L[1][2],L[1][1]))
+      print("Before")
+      for o in open:
+        print(o)
       open = sorted(open, key=lambda L: (L[1][2],L[1][1]))
 
+      print("After")
+      for o in open:
+        print(o)
 
 
       current_pos = open[0]
       open.pop(0)
       closed.append(current_pos)
+      #print (start_pos[0] + current_pos[0] + end_pos[0])
     
       
+    print("Path Found ... Drawing now Master")
+
     choosen_path = []
 
     while not (current_pos[0][0] == start_pos[0][0] and current_pos[0][1] == start_pos[0][1]):
