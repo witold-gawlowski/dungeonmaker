@@ -34,7 +34,7 @@ class dungeon_generator(object):
         root.AddChild(copied_node)
 
     if( self.mock_version ):
-      return self.chamber_generator_instance.generate_chamber( self.scene )
+      return self.chamber_generator_instance.generate_chamber( self.scene , [], [])
     
     result_nodes = []        
     return result_nodes
