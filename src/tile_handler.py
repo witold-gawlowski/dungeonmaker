@@ -190,51 +190,26 @@ class tile_handler:
 
     return False
 
-  def get_surrounding_pos(self, open, closed, current, grid_size, start, end):
-    # forwards
-    ## ADD IF OPEN OR CLOSED
-    for_pos = (current[0][0], current[0][1]+grid_size[1], current[0][2])
-    for_struct =(for_pos,self.calc_ghf_cost(start, end, for_pos), current[0])
+  def get_surrounding_pos(self, open, closed, current, grid_size, start, end,off_limit_shapes):
     
+    surrounding_pos = []
+    surrounding_pos.append((current[0][0], current[0][1]+grid_size[1], current[0][2])) # Forward pos
+    surrounding_pos.append((current[0][0], current[0][1]-grid_size[1], current[0][2])) # Backwards pos
+    surrounding_pos.append((current[0][0]-grid_size[0], current[0][1], current[0][2])) # Left pos
+    surrounding_pos.append((current[0][0]+grid_size[0], current[0][1], current[0][2])) # Right pos
 
-    if not self.in_the_list(for_struct[0], closed[0]):
-      # if list is empty or current != in list
-      if len(open) == 0:
-        open.append(for_struct)
-      elif not self.in_the_list(for_struct[0],open[0]):
-        open.append(for_struct)
 
-    # behind
-    beh_pos = (current[0][0], current[0][1]-grid_size[1], current[0][2])
-    beh_struct =(beh_pos,self.calc_ghf_cost(start, end, beh_pos), current[0])
-    if not self.in_the_list(beh_struct[0], closed[0]):
-      # if list is empty or current != in list
-      if len(open) == 0:
-        open.append(beh_struct)
-      elif not self.in_the_list(beh_struct[0],open[0]):
-        open.append(beh_struct)
-    
-    # left 
-    lef_pos = (current[0][0]-grid_size[0], current[0][1], current[0][2])
-    lef_struct =(lef_pos,self.calc_ghf_cost(start, end, lef_pos), current[0])
-    if not self.in_the_list(lef_struct[0], closed[0]):
-      # if list is empty or current != in list
-      if len(open) == 0:
-        open.append(lef_struct)
-      elif not self.in_the_list(lef_struct[0],open[0]):
-        open.append(lef_struct)
-    
+    surrounding_struct = []
+    for pos in surrounding_pos:
+      surrounding_struct.append((pos, self.calc_ghf_cost(start,end,pos),current[0]))
 
-    # right
-    rig_pos = (current[0][0]+grid_size[0],current[0][1], current[0][2])
-    rig_struct =(rig_pos,self.calc_ghf_cost(start, end, rig_pos), current[0])
-    if not self.in_the_list(rig_struct[0], closed[0]):
-      # if list is empty or current != in list
-      if len(open) == 0:
-        open.append(rig_struct)
-      elif not self.in_the_list(rig_struct[0],open[0]):
-        open.append(rig_struct)
-    
+    for struct in surrounding_struct:
+      if not self.in_shape_range(off_limit_shapes,struct[0],1):
+        if not self.in_the_list(struct[0],closed[0]):
+          if len(open) == 0:
+            open.append(struct)
+          elif not self.in_the_list(struct[0],open[0]):
+            open.append(struct)
 
 
     return open

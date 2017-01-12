@@ -22,6 +22,8 @@ class stairs_generator:
 
     #shape = self.tile_handler.snap_room_center(shape, tile_size)
 
+    off_limits_shapes = [((6,6,0),(4,20,0))]
+
     grid_size = (4,4,1)
 
     door_A_pos = (0,0,0)
@@ -45,7 +47,7 @@ class stairs_generator:
     #while current_pos is not end_pos:
     while not (current_pos[0][0] == end_pos[0][0] and current_pos[0][1] == end_pos[0][1]):
       #print = current_pos[0] +end_pos[
-      self.tile_handler.get_surrounding_pos(open, closed, current_pos, grid_size, start_pos[0], end_pos[0]) 
+      self.tile_handler.get_surrounding_pos(open, closed, current_pos, grid_size, start_pos[0], end_pos[0],off_limits_shapes) 
    
       
       # Sorts by F_cost then by H_cost
