@@ -26,7 +26,7 @@ class stairs_generator:
 
     door_A_pos = (0,0,0)
     door_A_pos = self.tile_handler.snap_to_edge(door_A_pos, grid_size)
-    door_B_pos = (10,14,0)
+    door_B_pos = (30,30,0)
     door_B_pos = self.tile_handler.snap_to_edge(door_B_pos, grid_size)
     
 
@@ -51,13 +51,13 @@ class stairs_generator:
       # Sorts by F_cost then by H_cost
       # open = sorted(open, key=lambda L: (L[1][2],L[1][1]))
 
-      open = sorted(open, key=lambda L: (L[1][2],L[1][1], L[0][1]))
+      open = sorted(open, key=lambda L: (L[1][1],L[1][2]))
 
 
       current_pos = open[0]
       open.pop(0)
       closed.append(current_pos)
-      #print (start_pos[0] + current_pos[0] + end_pos[0])
+      print (current_pos)
     
       
     print("Path Found ... Drawing now Master")
@@ -81,13 +81,17 @@ class stairs_generator:
     for cp in choosen_path:
       nodes.append(("Floor_2x2", cp, 0))
         
-   
+    # Add doors To nodes
+    nodes.append(("Floor_Door_Way_4x4x4", door_A_pos, 0))
+
 
     print("Room Generation complete with ", len(nodes), " tiles")
 
     return nodes
 
   #------- End Create Stairs ---------------------
+
+
 
   def create_room(self, new_scene, feature_name):
     start_time = time.time()
