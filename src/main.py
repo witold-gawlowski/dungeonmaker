@@ -6,7 +6,7 @@ if __name__ == '__main__':
 
   # Read input
   fbx_file_io = fbx_io.fbx_io()
-  top_level = fbx_file_io.import_components_file("components9")
+  top_level = fbx_file_io.import_components_file("components10")
 
   # Create a scene for scene objects to be attached to
   scene = fbx_file_io.create_scene("FBX ascii")

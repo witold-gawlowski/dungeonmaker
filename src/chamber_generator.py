@@ -16,5 +16,5 @@ class chamber_generator:
   # door list is just a list of xyz coordinates of doors
   def generate_chamber(self, scene, doors_list, chamber_list):
    # cg = self.rg.create_room(scene, "Floor_Flat")
-    cg = self.sg.create_room(scene,"Floor_Flat")
+    cg = self.sg.create_stairs(scene,"Floor_Flat")
     return cg
