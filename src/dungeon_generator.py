@@ -11,6 +11,10 @@ stair_heights = [3, 7, 11, 13, 17]
 level_bounds = [15, 15, 15]
 room_number = 5
 
+class Room ( object ):
+  def __init__(self, **kwargs):
+    self.__dict__.update( kwargs )
+
 class dungeon_generator(object):
   def __init__( self, chamber_generator_instance ):
     self.chamber_generator_instance = chamber_generator_instance
@@ -23,25 +27,29 @@ class dungeon_generator(object):
   # room in format [[pos_x, pos_y, pos_z], [size_x, size_y, size_z]]
   # all dimensions in tile units
 
-  def make_random_chamber( self, room = True ):
-    if room:
+
+  def make_random_chamber( self, is_room = True ):
+    if is_room:
       dimensions = [room_widths, room_widths, room_heights]
     else:
       dimensions = [stair_widths, stair_widths, stair_heights]
     size = list (map( random.choice, dimensions ) )
     bounds = [ i - j for i, j in zip( level_bounds, size ) ]
     position = map ( lambda x: random.randint(*x), [[0, bounds[0]], [0, bounds[1]], [0, bounds[2]]] )
-    return ( position, size )
+    return Room( position = list( position ), size = size, is_room = is_room )
   
   def make_random_chamber_at(self, doors, room = True ):
     return "todo"
 
-  def add_random_doors(self, chamber, room = True ):
+  def add_random_doors( chamber ):
+    doors
     chamber.unsatifsied_doors.append( doors )
 
   def generate( self ):
     starting_room = self.make_random_chamber()
-
+    print ( starting_room.position )
+    print ( starting_room.size )
+    print ( starting_room.is_room )
     #add_random_doors( room )
     #self.rooms.append( starting_room )
     #previous_room = starting_room

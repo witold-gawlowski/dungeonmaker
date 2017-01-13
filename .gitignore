@@ -4,3 +4,4 @@ __pycache__/
 *.blend1
 */result.fbx
 src/.vs/dungeon_generator/v14/.suo
+src/scenes/result.fbx
