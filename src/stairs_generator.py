@@ -88,7 +88,7 @@ class stairs_generator:
     nodes.append(("Floor_Door_Way_4x4x4", door_A_pos, 0))
 
 
-    print("Room Generation complete with ", len(nodes), " tiles")
+    print("Stairs Generation complete with ", len(nodes), " tiles")
     print(time.time() - start_time)
     return nodes
 
