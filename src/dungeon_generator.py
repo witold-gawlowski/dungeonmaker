@@ -19,7 +19,7 @@ class dungeon_generator(object):
   def __init__( self, chamber_generator_instance ):
     self.chamber_generator_instance = chamber_generator_instance
     self.map = {}
-    self.rooms = []
+    self.chambers = []
    
   def are_colliding( self, chaber_A , chamber_B ):
     return "todo"
@@ -59,13 +59,14 @@ class dungeon_generator(object):
     #  new_room = make_random_room_at( doors )
     return "todo"
 
-  def build():
-    
+  def build( self ):
+    for chamber in self.chambers:
+      self.chamber_generator_instance.generate_chamber(
 
   def generate( self ):
     # build_from_world_file()
     generate_world_data ()
-    build ()
+    build( self )
 
     
 
