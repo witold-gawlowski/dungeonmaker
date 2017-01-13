@@ -190,7 +190,7 @@ class tile_handler:
 
     return False
 
-  def get_surrounding_pos(self, open, closed, current, grid_size, start, end,off_limit_shapes):
+  def get_surrounding_pos(self, open, closed, current, grid_size, start, end,off_limit_shapes, allow_upper_positions):
     
     surrounding_pos = []
     # Same grid Level
@@ -199,11 +199,12 @@ class tile_handler:
     surrounding_pos.append((current[0][0]-grid_size[0], current[0][1], current[0][2])) # Left pos
     surrounding_pos.append((current[0][0]+grid_size[0], current[0][1], current[0][2])) # Right pos
     
-    # One grid level higher
-    #surrounding_pos.append((current[0][0], current[0][1]+grid_size[1], current[0][2]+grid_size[2])) # Forward pos
-    #surrounding_pos.append((current[0][0], current[0][1]-grid_size[1], current[0][2]+grid_size[2])) # Backwards pos
-    #surrounding_pos.append((current[0][0]-grid_size[0], current[0][1], current[0][2]+grid_size[2])) # Left pos
-    #surrounding_pos.append((current[0][0]+grid_size[0], current[0][1], current[0][2]+grid_size[2])) # Right pos
+    if allow_upper_positions == True:
+      # One grid level higher
+      surrounding_pos.append((current[0][0], current[0][1]+grid_size[1], current[0][2]+grid_size[2])) # Forward pos
+      surrounding_pos.append((current[0][0], current[0][1]-grid_size[1], current[0][2]+grid_size[2])) # Backwards pos
+      surrounding_pos.append((current[0][0]-grid_size[0], current[0][1], current[0][2]+grid_size[2])) # Left pos
+      surrounding_pos.append((current[0][0]+grid_size[0], current[0][1], current[0][2]+grid_size[2])) # Right pos
 
     surrounding_struct = []
     for pos in surrounding_pos:
