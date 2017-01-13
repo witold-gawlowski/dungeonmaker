@@ -15,11 +15,11 @@ class room_generator:
     self.tile_handler = tile_handler
     random.seed(time.time())
 
-  def split_square(self, square, max_height):
+  def split_square(self, square, size_bounds):
     tile_size = self.tile_handler.tile_size
     (center, size) = square
     anchor = (center[0]-size[0]*tile_size*0.5,center[1]-size[1]*tile_size*0.5)
-    axis = (0 if random.randrange(0, size[0]*size[1])>size[0] else 1)
+    axis = (0 if random.randrange(0, size[0]*size[1])<size[0] else 1)
     other = (0 if axis else 1)
     if size[axis] <= 2:
       axis = other
@@ -28,25 +28,27 @@ class room_generator:
     
     sizeA = sizeB = centerA = centerB = (0,0,0)
     if axis:
-      sizeA = (size[0], breakpoint,  max_height)
-      sizeB = (size[0], size[1]-breakpoint, max_height)
+      sizeA = (size[0], breakpoint,  random.randrange(2, size_bounds[2]+1, 2))
+      sizeB = (size[0], size[1]-breakpoint, random.randrange(2, size_bounds[2]+1, 2))
       centerA = (center[0], anchor[1]+sizeA[1]*tile_size*0.5, center[2])
       centerB = (center[0], anchor[1]+(breakpoint*tile_size)+(sizeB[1]*tile_size*0.5), center[2])
     else:
-      sizeA = (breakpoint, size[1], max_height)
-      sizeB = (size[0]-breakpoint, size[1], max_height)
+      sizeA = (breakpoint, size[1], random.randrange(2, size_bounds[2]+1, 2))
+      sizeB = (size[0]-breakpoint, size[1], random.randrange(2, size_bounds[2]+1, 2))
       centerA = (anchor[0]+sizeA[0]*tile_size*0.5, center[1], center[2])
       centerB = (anchor[0]+(breakpoint*tile_size)+(sizeB[0]*tile_size*0.5), center[1], center[2])
     squareA = (centerA, sizeA)
     squareB = (centerB, sizeB)
     
+    room_grandness = (16 if size_bounds[0]*size_bounds[1] < 100 else 36)
+
     child_squares = []
-    if (squareA[1][0]*squareA[1][1] > 16):
-      child_squares += self.split_square(squareA,max_height)
+    if (squareA[1][0]*squareA[1][1] > room_grandness):
+      child_squares += self.split_square(squareA,size_bounds)
     else:
       child_squares.append(squareA)
-    if (squareB[1][0]*squareB[1][1] > 16):
-      child_squares += self.split_square(squareB,max_height)
+    if (squareB[1][0]*squareB[1][1] > room_grandness):
+      child_squares += self.split_square(squareB,size_bounds)
     else:
       child_squares.append(squareB)
     
@@ -75,7 +77,7 @@ class room_generator:
       way_tiles.append(((closestTile[0],closestTile[1],floorcenter[2]),(1,1,1)))
     
     # Divide the room into small squares
-    divfloor = self.split_square(floorspace, bounds[0][1][2])
+    divfloor = self.split_square(floorspace, bounds[0][1])
 
     output = []
     for divide in divfloor:
@@ -106,11 +108,11 @@ class room_generator:
         if newpath is not None:
           output.append(newpath)
 
-    for i in range(len(output)):
-      (center, size) = output[i]
-      height = random.randrange(2, size[2]+1, 2)
-      output[i] = (center, (size[0], size[1], height))
-      print(height)
+    #for i in range(len(output)):
+    #  (center, size) = output[i]
+    #  height = random.randrange(2, size[2]+1, 2)
+    #  output[i] = (center, (size[0], size[1], height))
+    #  print(height)
 
     #output += random.sample(divfloor, 3)
     return output
@@ -118,44 +120,28 @@ class room_generator:
   def create_room(self, feature_name, bounds):
     start_time = time.time()
     print("Creating room ... ")
+
     tile_size = self.tile_handler.tile_size
 
     doors = [(40, 0, 0), (-10, 40, 0), (-40, 16, 0)]
     door_mask = self.makeDoorMask(doors)
+
     bounds = [((0,0,0), (21,21, 10))]
     bounds = self.tile_handler.snap_room_center(bounds, tile_size)
+
     shape = self.make_room_dimentions(bounds, doors)
     shape = self.tile_handler.snap_room_center(shape, tile_size)
+    # Sort the shape in order of tallest square to shortest square
+    shape = sorted(shape, key = lambda tup: tup[1][2], reverse = True)
 
-    #shape = [((0,0,0), (13,  13,  9)),
-    #         ((0,0,0), (7, 7, 14))]
-
-    #bounds = [((0,52,0), (60,  60,  10))]
-    #shape = [((0,  0,  0), (16,  40,  3)),
-    #         ((0,  8,  0), (10,  36,  8)),
-    #         ((0,  72,  0), (30,  8,  3)),
-    #         ((0,  72,  0), (24,  4,  8)),
-    #         ((0,  72,  0), (6,  4,  10)),
-    #         ((0,  104,  0), (10,  8,  3)),
-    #         ((0,  96,  0), (6,  8,  8))]
-
-    #shape = [((2,0,0), (20,1)),
-    #         ((2,20,0), (20,1)),
-    #         ((2,40,0), (20,1)),
-    #         ((38,8,0), (2,4)),
-    #         ((-34,28,0), (2,4))]
-
-    #shape = [((0,0,0), (4,3))]
-
-
-    
+    pillars = self.make_pillars(shape)
+    pillars = self.tile_handler.snap_room_center(pillars, tile_size)
 
     #pillars = [((16,0,0),(1,1,9)),
     #           ((-16,0,0),(1,1,9)),
     #           ((0,16,0),(1,1,9)),
     #           ((0,-16,0),(1,1,9))]
     #pillars = self.tile_handler.snap_room_center(pillars, tile_size)
-    pillars = []
     nodes = []
 
     pos = self.tile_handler.start_position_in_shape(shape, tile_size)
@@ -166,43 +152,41 @@ class room_generator:
     todo = [(pos, angle, feature_name, False)]
     
     # FLOOR =================================================
-    nodes = self.tile_handler.complete_todo(todo, edges, nodes, shape, pillars, "Floor_2x2", True)
+    nodes = self.tile_handler.complete_todo(todo, edges, nodes, shape, None, "Floor_2x2", True)
     
     # CEILING ==============================================
-    # Sort the shape in order of tallest square to shortest square
-    shape = sorted(shape, key = lambda tup: tup[1][2], reverse = True)
     self.makeCeiling(edges, nodes, shape, pillars)
     
 
     # WALLS BASE =================================================
-    todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Flat"])
-    nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_4x4x4", False) 
+    #todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Flat"])
+    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_4x4x4", False) 
 
-    todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Flat"], "Floor_2x2")
-    nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_L_4x4x4", False)
-    todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
-    nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_L_4x4x4", False)
-    todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
-    nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_T_4x4x4", False)
-    todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
-    nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_X_4x4x4", False)
-    todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
-    nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_End_4x4x4", False)
+    #todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Flat"], "Floor_2x2")
+    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_L_4x4x4", False)
+    #todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
+    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_L_4x4x4", False)
+    #todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
+    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_T_4x4x4", False)
+    #todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
+    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_X_4x4x4", False)
+    #todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
+    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_End_4x4x4", False)
 
 
     # CEILING WALL TOP =================================================
-    todo = self.tile_handler.create_todo(edges, nodes, ["Ceiling_Flat"])
-    nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, shape, "Ceiling_Wall_4x4x4", False)
+    #todo = self.tile_handler.create_todo(edges, nodes, ["Ceiling_Flat"])
+    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, shape, "Ceiling_Wall_4x4x4", False)
     
-    todo = self.tile_handler.create_todo(edges, nodes, ["Ceiling_Flat"], "Ceiling_Floor_2x2")
-    nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, shape + door_mask, "Ceiling_Wall_L_4x4x4", False)
-    todo = self.tile_handler.create_todo(edges, nodes, ["Ceiling_Wall_End"])
-    nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, shape + door_mask, "Ceiling_Wall_L_4x4x4", False)
+    #todo = self.tile_handler.create_todo(edges, nodes, ["Ceiling_Flat"], "Ceiling_Floor_2x2")
+    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, shape + door_mask, "Ceiling_Wall_L_4x4x4", False)
+    #todo = self.tile_handler.create_todo(edges, nodes, ["Ceiling_Wall_End"])
+    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, shape + door_mask, "Ceiling_Wall_L_4x4x4", False)
 
-    todo = self.tile_handler.create_todo(edges, nodes, ["Ceiling_Flat"])
-    nodes = self.tile_handler.complete_todo(todo, edges, nodes, shape, None, "Floor_Wall_4x4x4", False)
-    todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
-    nodes = self.tile_handler.complete_todo(todo, edges, nodes, shape, door_mask, "Floor_Wall_L_4x4x4", False)
+    #todo = self.tile_handler.create_todo(edges, nodes, ["Ceiling_Flat"])
+    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, shape, None, "Floor_Wall_4x4x4", False)
+    #todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
+    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, shape, door_mask, "Floor_Wall_L_4x4x4", False)
 
 
     # WALL FILL
@@ -223,31 +207,31 @@ class room_generator:
     #nodes = self.tile_handler.complete_todo(todo, edges, nodes, bounds, door_mask, "Mid_Wall_4x4x4", True)
 
     # PILLAR BASE + TOP =================================================
-    #pillar_edges = {}
-    #pillar_nodes = []
-    #todo = []
-    #for pillar in pillars:
-    #  (coords, size) = pillar
-    #  todo.append(((coords[0],coords[1]-tile_size*0.5,coords[2]), 0, "Floor_Flat", False))
+    pillar_edges = {}
+    pillar_nodes = []
+    todo = []
+    for pillar in pillars:
+      (coords, size) = pillar
+      todo.append(((coords[0],coords[1]-tile_size*0.5,coords[2]), 0, "Floor_Flat", False))
 
-    #tmp_todo = []
-    #tmp_todo += todo
-    #pillar_nodes = self.tile_handler.complete_todo(todo, pillar_edges, pillar_nodes, pillars, None, "Floor_Column_large_4x4x2", False) 
-    #pillar_nodes = self.tile_handler.complete_todo(tmp_todo, {}, pillar_nodes, pillars, None, "Floor_2x2", False) 
+    tmp_todo = []
+    tmp_todo += todo
+    pillar_nodes = self.tile_handler.complete_todo(todo, pillar_edges, pillar_nodes, pillars, None, "Floor_Column_large_4x4x2", False) 
+    pillar_nodes = self.tile_handler.complete_todo(tmp_todo, {}, pillar_nodes, pillars, None, "Floor_2x2", False) 
 
-    #for pillar in pillars:
-    #  (coords, size) = pillar
-    #  todo.append(((coords[0],coords[1]-tile_size*0.5,coords[2]+size[2]*tile_size), 0, "Ceiling_Flat", False))
+    for pillar in pillars:
+      (coords, size) = pillar
+      todo.append(((coords[0],coords[1]-tile_size*0.5,coords[2]+size[2]*tile_size), 0, "Ceiling_Flat", False))
 
-    #tmp_todo = []
-    #tmp_todo += todo
-    #pillar_nodes = self.tile_handler.complete_todo(todo, pillar_edges, pillar_nodes, pillars, None, "Ceiling_Column_large_4x4x2", False)
+    tmp_todo = []
+    tmp_todo += todo
+    pillar_nodes = self.tile_handler.complete_todo(todo, pillar_edges, pillar_nodes, pillars, None, "Ceiling_Column_large_4x4x2", False)
 
-    ## PILLAR FILL =================================================
-    #todo = self.tile_handler.create_todo(pillar_edges, pillar_nodes, ["Mid_Column_Large_Top"])
-    #pillar_nodes = self.tile_handler.complete_todo(todo, pillar_edges, pillar_nodes, pillars, None, "Mid_Column_large_4x4x4", True)
+    # PILLAR FILL =================================================
+    todo = self.tile_handler.create_todo(pillar_edges, pillar_nodes, ["Mid_Column_Large_Top"])
+    pillar_nodes = self.tile_handler.complete_todo(todo, pillar_edges, pillar_nodes, pillars, None, "Mid_Column_large_4x4x4", True)
 
-    #nodes += pillar_nodes
+    nodes += pillar_nodes
 
     print("Room Generation complete with ", len(nodes), " tiles and took ", (time.time() - start_time), " seconds")
 
@@ -296,6 +280,15 @@ class room_generator:
 
       nodes += ceilingNodes
 
+  def make_pillars(self, shape):
+    pillars = []
+    for square in shape:
+      (center, size) = square
+      if size[2] > 4:
+        if size[0] <= 1 or size[1] <= 1:
+          break;
+        pillars.append((center, (1,1,size[2])))
+    return pillars
 
 
   def makeDoorMask(self, doors):
