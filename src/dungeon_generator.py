@@ -31,10 +31,12 @@ class dungeon_generator(object):
     for node in self.worldfile_obj:
       if node.GetName().startswith ( "PrecreatedRoom" ):
         copied_node = self.copy_node_with_children ( node, utils.snap_to_parent_grid)
-        root.AddChild(copied_node)
+        #root.AddChild(copied_node)
 
     if( self.mock_version ):
-      return self.chamber_generator_instance.generate_chamber( self.scene , [], [])
+      doors = [(16, 0, 0), (-10, 16, 0), (-4, 16, 0)]
+      bounds = [((0,0,0), (9,9, 30))]
+      return self.chamber_generator_instance.generate_chamber(doors, bounds)
     
     result_nodes = []        
     return result_nodes

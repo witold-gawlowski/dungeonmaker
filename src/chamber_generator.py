@@ -10,11 +10,15 @@ class chamber_generator:
     self.rg = room_generator.room_generator(tile_h) 
     self.sg = stairs_generator.stairs_generator(tile_h)
         
-  # each chamber is in format of [ [pos_x, pos_y, pos_z] , [size_x, size_y, size_z] ]
+  # each chamber is in format of ( (pos_x, pos_y, pos_z) , (size_x, size_y, size_z) )
   # pos_xyz specify xyz coordinates of the corner of a chamber wih smallest coordinates.
   # size is given in unites of tiles: 4x4x4
   # door list is just a list of xyz coordinates of doors
-  def generate_chamber(self, scene, doors_list, chamber_list):
-    cg = self.rg.create_room("Floor_Flat", [])
+  # Example formats:   
+  #  doors = [(40, 0, 0), (-10, 40, 0), (-40, 16, 0)]
+  #  bounds = [((0,0,0), (21,21, 10))]
+
+  def generate_chamber(self, doors_list, chamber_list):
+    cg = self.rg.create_room(doors_list, chamber_list)
     #cg = self.sg.create_stairs(scene,"Floor_Flat")
     return cg
