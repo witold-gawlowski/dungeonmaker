@@ -157,8 +157,8 @@ class tile_handler:
     x_dist = pointB[0] - pointA[0]
     y_dist = pointB[1] - pointA[1]
     z_dist = pointB[2] - pointA[2]
-    distance = (x_dist, y_dist, z_dist)
-    return x_dist + y_dist + z_dist
+    distance = math.sqrt(x_dist*x_dist + y_dist*y_dist + z_dist*z_dist)
+    return distance
   ## ======== END get_distance
   
   def snap_grid_center(self, pos, grid_size):
@@ -183,24 +183,34 @@ class tile_handler:
     return (g_cost, h_cost, f_cost)
   ## ======== END calc_ghf_cost
 
-  def get_surrounding_pos(self, open, current, grid_size, start, end):
-    # forwards
-    ## ADD IF OPEN OR CLOSED HAS IT CHECK THE GHF COSTS
-    test = current
-    for_pos = (current[0][0],current[0][1]+grid_size[1],current[0][2])
-    open.append((for_pos,self.calc_ghf_cost(start, end, for_pos), current[0]))
+  def in_the_list(self, current, list):
+    for l in list:
+      if l == current:
+        return True
+
+    return False
+
+  def get_surrounding_pos(self, open, closed, current, grid_size, start, end,off_limit_shapes):
     
-    # behind
-    beh_pos = (current[0][0], current[0][1]-grid_size[1], current[0][2])
-    open.append((beh_pos,self.calc_ghf_cost(start,end,beh_pos), current[0]))
-    
-    # left 
-    lef_pos = (current[0][0]-grid_size[0],current[0][1], current[0][2])
-    open.append((lef_pos, self.calc_ghf_cost(start,end,lef_pos),current[0]))
-    
-    # right
-    rig_pos = (current[0][0]+grid_size[0],current[0][1], current[0][2])
-    open.append((rig_pos, self.calc_ghf_cost(start,end,rig_pos),current[0]))
+    surrounding_pos = []
+    surrounding_pos.append((current[0][0], current[0][1]+grid_size[1], current[0][2])) # Forward pos
+    surrounding_pos.append((current[0][0], current[0][1]-grid_size[1], current[0][2])) # Backwards pos
+    surrounding_pos.append((current[0][0]-grid_size[0], current[0][1], current[0][2])) # Left pos
+    surrounding_pos.append((current[0][0]+grid_size[0], current[0][1], current[0][2])) # Right pos
+
+
+    surrounding_struct = []
+    for pos in surrounding_pos:
+      surrounding_struct.append((pos, self.calc_ghf_cost(start,end,pos),current[0]))
+
+    for struct in surrounding_struct:
+      if not self.in_shape_range(off_limit_shapes,struct[0],1):
+        if not self.in_the_list(struct[0],closed[0]):
+          if len(open) == 0:
+            open.append(struct)
+          elif not self.in_the_list(struct[0],open[0]):
+            open.append(struct)
+
 
     return open
 
