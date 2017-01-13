@@ -36,7 +36,7 @@ class room_generator:
     nodes = []
 
     pos = self.tile_handler.start_position_in_shape(shape, tile_size)
-    pos = tile_util.xyz_round((pos[0], pos[1]-tile_size*0.5, 0))
+    pos = tile_util.xyz_round((pos[0], pos[1]-tile_size*0.5, bounds[0][0][2]))
     edges = {}
     angle = 0
     # create an unsatisfied edge
@@ -123,8 +123,7 @@ class room_generator:
 
     tmp_todo = []
     tmp_todo += todo
-    pillar_nodes = self.tile_handler.complete_todo(todo, pillar_edges, pillar_nodes, pillars, None, "Floor_Column_large_4x4x2", False) 
-    pillar_nodes = self.tile_handler.complete_todo(tmp_todo, {}, pillar_nodes, pillars, None, "Floor_2x2", False) 
+    pillar_nodes = self.tile_handler.complete_todo(todo, pillar_edges, pillar_nodes, pillars, None, "Floor_Column_large_4x4x2", False)
 
     for pillar in pillars:
       (coords, size) = pillar
@@ -285,9 +284,9 @@ class room_generator:
       for x in range(int(point[0]), int(point[0]+square[1][0]*tile_size), int(tile_size)):
         for y in range(int(point[1]), int(point[1]+square[1][1]*tile_size), int(tile_size)):
           if not self.tile_handler.in_shape_range(mask, (x, y, square[1][2]), tile_size):
-            pos = tile_util.xyz_round((x, y - tile_size * 0.5, tile_size * square[1][2]))
+            pos = tile_util.xyz_round((x, y - tile_size * 0.5, square[0][2] + tile_size * square[1][2]))
             todo.append((pos, angle, "Ceiling_Flat", False))
-
+             
 
       ceilingNodes = self.tile_handler.complete_todo(todo, edges, ceilingNodes, [square], mask, "Ceiling_Floor_2x2", False)
       

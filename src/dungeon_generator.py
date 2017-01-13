@@ -34,8 +34,8 @@ class dungeon_generator(object):
         #root.AddChild(copied_node)
 
     if( self.mock_version ):
-      doors = [(16, 0, 0), (-10, 16, 0), (-4, 16, 0)]
-      bounds = [((0,0,0), (9,9, 30))]
+      doors = [(136, 120, 30), (110, 136, 30), (116, 136, 30)]
+      bounds = [((120, 120, 30), (9,9, 5))]
       return self.chamber_generator_instance.generate_chamber(doors, bounds)
     
     result_nodes = []        
