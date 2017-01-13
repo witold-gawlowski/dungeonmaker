@@ -17,7 +17,7 @@ if __name__ == '__main__':
   chamber_generator_instance = chamber_generator.chamber_generator(top_level)
 
   # Initialise the dungeon_generator
-  dungeon_generator_instance = dungeon_generator.dungeon_generator(chamber_generator_instance, fbx_file_io, scene, "worldfile")
+  dungeon_generator_instance = dungeon_generator.dungeon_generator(chamber_generator_instance)
 
   # Algorithm to stitch rooms together
   # Each room is returned as an array of "nodes" (tile instances)
