@@ -263,12 +263,24 @@ class tile_handler:
         if pos[2] <= roomCenter[2] + size[2]*scale and pos[2] >= roomCenter[2]:
           return True 
     return False
-  ## ======== END create_todo
+  ## ======== END in_shape_range
 
-  def create_todo(self, edges, nodes, feature_names = None):
+  def get_shape_at_pos(self, shape, pos, scale):
+    for square in shape:
+      (roomCenter, size) = square
+      if ((pos[0] <= roomCenter[0]+(scale*size[0]*0.5) and pos[0] >= roomCenter[0]-(scale*size[0]*0.5)) and (pos[1] <= roomCenter[1]+(scale*size[1]*0.5) and pos[1] >= roomCenter[1]-(scale*size[1]*0.5))):
+        if pos[2] <= roomCenter[2] + size[2]*scale and pos[2] >= roomCenter[2]:
+          return square 
+    return None
+  ## ======== END in_shape_range
+
+  def create_todo(self, edges, nodes, feature_names = None, tile_name_ = None):
     todo = []
     for node in nodes:
       (tile_name, tile_pos, new_angle) = node
+      if tile_name_ != None:
+        if tile_name_ != tile_name:
+          continue
       outgoing = self.outgoing[tile_name]
       for out_sel in range(len(outgoing)):
         out_feature_name, out_tile_name, out_trans, out_rot = outgoing[out_sel]
