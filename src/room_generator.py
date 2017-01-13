@@ -159,34 +159,37 @@ class room_generator:
     
 
     # WALLS BASE =================================================
-    #todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Flat"])
-    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_4x4x4", False) 
+    todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Flat"])
+    nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_4x4x4", False) 
 
-    #todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Flat"], "Floor_2x2")
-    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_L_4x4x4", False)
-    #todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
-    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_L_4x4x4", False)
-    #todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
-    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_T_4x4x4", False)
-    #todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
-    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_X_4x4x4", False)
-    #todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
-    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_End_4x4x4", False)
+    todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Flat"])
+    nodes = self.tile_handler.complete_todo(todo, edges, nodes, door_mask, None, "Floor_Door_Way_4x4x4", False) 
+
+    todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Flat"], "Floor_2x2")
+    nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_L_4x4x4", False)
+    todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
+    nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_L_4x4x4", False)
+    todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
+    nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_T_4x4x4", False)
+    todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
+    nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_X_4x4x4", False)
+    todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
+    nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_End_4x4x4", False)
 
 
     # CEILING WALL TOP =================================================
-    #todo = self.tile_handler.create_todo(edges, nodes, ["Ceiling_Flat"])
-    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, shape, "Ceiling_Wall_4x4x4", False)
+    todo = self.tile_handler.create_todo(edges, nodes, ["Ceiling_Flat"])
+    nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, shape, "Ceiling_Wall_4x4x4", False)
     
-    #todo = self.tile_handler.create_todo(edges, nodes, ["Ceiling_Flat"], "Ceiling_Floor_2x2")
-    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, shape + door_mask, "Ceiling_Wall_L_4x4x4", False)
-    #todo = self.tile_handler.create_todo(edges, nodes, ["Ceiling_Wall_End"])
-    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, shape + door_mask, "Ceiling_Wall_L_4x4x4", False)
+    todo = self.tile_handler.create_todo(edges, nodes, ["Ceiling_Flat"], "Ceiling_Floor_2x2")
+    nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, shape + door_mask, "Ceiling_Wall_L_4x4x4", False)
+    todo = self.tile_handler.create_todo(edges, nodes, ["Ceiling_Wall_End"])
+    nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, shape + door_mask, "Ceiling_Wall_L_4x4x4", False)
 
-    #todo = self.tile_handler.create_todo(edges, nodes, ["Ceiling_Flat"])
-    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, shape, None, "Floor_Wall_4x4x4", False)
-    #todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
-    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, shape, door_mask, "Floor_Wall_L_4x4x4", False)
+    todo = self.tile_handler.create_todo(edges, nodes, ["Ceiling_Flat"])
+    nodes = self.tile_handler.complete_todo(todo, edges, nodes, shape, None, "Floor_Wall_4x4x4", False)
+    todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
+    nodes = self.tile_handler.complete_todo(todo, edges, nodes, shape, door_mask, "Floor_Wall_L_4x4x4", False)
 
 
     # WALL FILL
