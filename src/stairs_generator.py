@@ -13,29 +13,32 @@ class stairs_generator:
     self.tile_handler = tile_handler
 
 
-  def create_stairs(self, new_scene, feature_name):
+  def create_stairs(self, feature_name, doors, bounds, shape):
+    nodes = []
+    self.create_stairs_shell(nodes, feature_name, doors,bounds,shape)
+
     print("Finding Path ... ")
     start_time = time.time()
     tile_size = 4;
    
-    shape = []
+    #shape = []
 
     #shape = self.tile_handler.snap_room_center(shape, tile_size)
 
-    off_limits_shapes = [((6,6,0),(4,10,10))]
+    off_limits_shapes = [((6,6,0),(4,10,10)),
+                         ((14,6,0),(4,10,10))]
 
     grid_size = (4,4,1)
 
-    door_A_pos = (0,0,0)
-    door_A_pos = self.tile_handler.snap_to_edge(door_A_pos, grid_size)
-    door_B_pos = (30,30,10)
-    door_B_pos = self.tile_handler.snap_to_edge(door_B_pos, grid_size)
-    
+    doors[0] = self.tile_handler.grid_to_tile_space(doors[0],grid_size)
+    doors[1] = self.tile_handler.grid_to_tile_space(doors[1],grid_size)
+
+    #doors[1] = self.tile_handler.snap_to_edge(doors[1],grid_size)
 
     #start_pos = (self.tile_handler.snap_grid_center(door_A_pos,grid_size), (0,0,0),(0,0,0))
-    start_pos = ((door_A_pos[0],door_A_pos[1]+4,door_A_pos[2]),(0,0,0),(0,0,0))
+    start_pos = ((doors[0][0],doors[0][1]+4,doors[0][2]),(0,0,0),(0,0,0))
     #end_pos = (self.tile_handler.snap_grid_center(door_B_pos,grid_size), (0,0,0),(0,0,0))
-    end_pos = ((door_B_pos[0],door_B_pos[1]-4,door_B_pos[2]),(0,0,0),(0,0,0))
+    end_pos = ((doors[1][0],doors[1][1]-4,doors[1][2]),(0,0,0),(0,0,0))
 
     open = []
     closed = []
@@ -46,6 +49,7 @@ class stairs_generator:
     # get lowest f_cost 
     #current_pos = min(open, key=lambda L: L[1][2])
     allow_upper_pos = True
+    
     #while current_pos is not end_pos:
     while not (current_pos[0][0] == end_pos[0][0] and current_pos[0][1] == end_pos[0][1] and current_pos[0][2] == end_pos[0][2]):
       #print = current_pos[0] +end_pos[
@@ -88,7 +92,8 @@ class stairs_generator:
     ######### check the next tile to see if it is higher or same height as current
     choosen_path.reverse()
 
-    nodes = []
+   
+
     pre_pos = choosen_path[0]
     rotation = 0
     for index, cp in enumerate(choosen_path):
@@ -113,8 +118,8 @@ class stairs_generator:
        
         
     # Add doors To nodes
-    nodes.append(("Floor_Door_Way_4x4x4", door_A_pos, 0))
-    nodes.append(("Floor_Door_Way_4x4x4", door_B_pos, 180))
+    nodes.append(("Floor_Door_Way_4x4x4", doors[0], 0))
+    nodes.append(("Floor_Door_Way_4x4x4", (doors[1][0]-4,doors[1][1],doors[1][2]), 180))
 
 
     print("Stairs Generation complete with ", len(nodes), " tiles")
@@ -122,3 +127,40 @@ class stairs_generator:
     return nodes
 
   #------- End Create Stairs ---------------------
+
+  def create_stairs_shell(self, nodes, feature_name, doors,bounds,shape):
+    start_time = time.time()
+    print("Creating Stairs Shell ... ")
+    tile_size = self.tile_handler.tile_size
+    #bounds = [((0,0,0), (14,  14,  14))]
+    #shape = [((0,0,0), (13,  13,  9)),
+    #         ((0,0,0), (7, 7, 14))]
+
+    #doors = [(28, 0, 0),
+    #         (-28, 0, 0)]
+   
+
+    incoming = self.tile_handler.incoming["Wall_St_Top"]
+    
+    #nodes = []
+
+    pos = self.tile_handler.start_position_in_shape(shape, tile_size)
+    pos = tile_util.xyz_round((pos[0], pos[1]-tile_size*0.5, 0))
+    edges = {}
+    angle = 0
+    # create an unsatisfied edge
+    todo = [(pos, angle, feature_name, False)]
+    
+    # FLOOR =================================================
+    nodes = self.tile_handler.complete_todo(todo, edges, nodes, shape, None, "Floor_2x2", True)
+    
+    # WALLS BASE =================================================
+    todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Flat"])
+    nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, None, "Floor_Wall_4x4x4", False) 
+
+    todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
+    nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, None, "Floor_Wall_L_4x4x4", False)
+  
+    print("Stairs Shell Generation complete with ", len(nodes), " tiles and took ", (time.time() - start_time), " seconds")
+
+    return nodes

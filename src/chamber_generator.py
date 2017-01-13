@@ -15,6 +15,9 @@ class chamber_generator:
   # size is given in unites of tiles: 4x4x4
   # door list is just a list of xyz coordinates of doors
   def generate_chamber(self, scene, doors_list, chamber_list):
-    cg = self.rg.create_room("Floor_Flat", [])
-    #cg = self.sg.create_stairs(scene,"Floor_Flat")
+    #cg = self.rg.create_room("Floor_Flat", [])
+    temp_doors = [(0,-7,0),(5,7,10)]
+    bounds = [((0,0,0),(14,14,14))]
+    shape = [((0,0,0), (13,  13,  9))]
+    cg = self.sg.create_stairs("Floor_Flat",temp_doors,bounds,shape)
     return cg
