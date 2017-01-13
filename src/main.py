@@ -25,9 +25,10 @@ if __name__ == '__main__':
   nodes = dungeon_generator_instance.generate()
 
   # This takes all the nodes and sends them to the FXB output.
-  for node in nodes:
-    (tile_name, tile_pos, new_angle) = node
-    fbx_file_io.make_node(scene, tile_name, tile_pos, new_angle)
+  if nodes:
+    for node in nodes:
+      (tile_name, tile_pos, new_angle) = node
+      fbx_file_io.make_node(scene, tile_name, tile_pos, new_angle)
 
   # Write result
   # Close fbx
