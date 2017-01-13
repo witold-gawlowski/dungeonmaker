@@ -161,6 +161,13 @@ class tile_handler:
     return distance
   ## ======== END get_distance
   
+  def grid_to_tile_space(self, pos, gridsize):
+    x = pos[0] * gridsize[0]
+    y = pos[1] * gridsize[1]
+    z = pos[2] * gridsize[2]
+    return (x,y,z)
+  ## ======== END get_distance
+
   def snap_grid_center(self, pos, grid_size):
     pos = ((pos[0] + grid_size[0]*0.5), (pos[1] + grid_size[1]*0.5),pos[2])
     return pos

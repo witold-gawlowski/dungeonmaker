@@ -17,8 +17,9 @@ class chamber_generator:
   # Example formats:   
   #  doors = [(40, 0, 0), (-10, 40, 0), (-40, 16, 0)]
   #  bounds = [((0,0,0), (21,21, 10))]
-
+  #
+  # generate_chamber is called by dungeon_generator in function "generate"
   def generate_chamber(self, doors_list, chamber_list):
     cg = self.rg.create_room(doors_list, chamber_list)
-    #cg = self.sg.create_stairs(scene,"Floor_Flat")
+    #cg = self.sg.create_stairs(doors_list, chamber_list)
     return cg
