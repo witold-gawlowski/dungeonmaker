@@ -13,7 +13,7 @@ if __name__ == '__main__':
 
 
 
-  # Initialise rooms and stairs generators (to be used in the algorythm bellow)
+  # Initialise rooms and stairs generators (to be used in the algorithm below)
   chamber_generator_instance = chamber_generator.chamber_generator(top_level)
 
   # Initialise the dungeon_generator

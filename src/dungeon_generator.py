@@ -11,7 +11,7 @@ stair_heights = [3, 7, 11, 13, 17]
 level_bounds = [15, 15, 15]
 room_number = 5
 
-class Room ( object ):
+class Chamber ( object ):
   def __init__(self, **kwargs):
     self.__dict__.update( kwargs )
 
@@ -36,25 +36,38 @@ class dungeon_generator(object):
     size = list (map( random.choice, dimensions ) )
     bounds = [ i - j for i, j in zip( level_bounds, size ) ]
     position = map ( lambda x: random.randint(*x), [[0, bounds[0]], [0, bounds[1]], [0, bounds[2]]] )
-    return Room( position = list( position ), size = size, is_room = is_room )
-  
-  def make_random_chamber_at(self, doors, room = True ):
+    return Chamber( position = list( position ), size = size, is_room = is_room )
+
+  ''' inflates all the chambers, adds 
+  the encountered chambers to the pairs of rooms candidating for door addition '''
+  def grow_chambers( self ):
     return "todo"
 
-  def add_random_doors( chamber ):
-    doors
-    chamber.unsatifsied_doors.append( doors )
+  ''''''
+  def create_and_link_chamber_to( self, chamber, is_room = True ):
+    return "todo"
+
+  def build_from_world_file():
+    return "todo"
+
+  def generate_world_data():
+    starting_room = self.make_random_chamber()
+    # add_random_doors( room )
+    # self.rooms.append( starting_room )
+    # previous_room = starting_room
+    # for i in range( room_number ):
+    #  new_room = make_random_room_at( doors )
+    return "todo"
+
+  def build():
+    
 
   def generate( self ):
-    starting_room = self.make_random_chamber()
-    print ( starting_room.position )
-    print ( starting_room.size )
-    print ( starting_room.is_room )
-    #add_random_doors( room )
-    #self.rooms.append( starting_room )
-    #previous_room = starting_room
-    #for i in range( room_number ):
-    #  new_room = make_random_room_at( doors )
+    # build_from_world_file()
+    generate_world_data ()
+    build ()
+
+    
 
   def copy_node_with_children( self, source , node_processor = lambda x: x):
     dest_node = fbx.FbxNode.Create( self.scene, source.GetName() )
