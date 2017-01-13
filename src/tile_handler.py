@@ -177,8 +177,8 @@ class tile_handler:
   ## ======== END snap_to_edge
   
   def calc_ghf_cost(self, start, end, current):
-    g_cost = abs(self.get_distance(start,current))
-    h_cost = abs(self.get_distance(current, end))
+    g_cost = self.get_distance(start,current)
+    h_cost = self.get_distance(current, end)
     f_cost = g_cost + h_cost
     return (g_cost, h_cost, f_cost)
   ## ======== END calc_ghf_cost
@@ -193,11 +193,17 @@ class tile_handler:
   def get_surrounding_pos(self, open, closed, current, grid_size, start, end,off_limit_shapes):
     
     surrounding_pos = []
+    # Same grid Level
     surrounding_pos.append((current[0][0], current[0][1]+grid_size[1], current[0][2])) # Forward pos
     surrounding_pos.append((current[0][0], current[0][1]-grid_size[1], current[0][2])) # Backwards pos
     surrounding_pos.append((current[0][0]-grid_size[0], current[0][1], current[0][2])) # Left pos
     surrounding_pos.append((current[0][0]+grid_size[0], current[0][1], current[0][2])) # Right pos
-
+    
+    # One grid level higher
+    #surrounding_pos.append((current[0][0], current[0][1]+grid_size[1], current[0][2]+grid_size[2])) # Forward pos
+    #surrounding_pos.append((current[0][0], current[0][1]-grid_size[1], current[0][2]+grid_size[2])) # Backwards pos
+    #surrounding_pos.append((current[0][0]-grid_size[0], current[0][1], current[0][2]+grid_size[2])) # Left pos
+    #surrounding_pos.append((current[0][0]+grid_size[0], current[0][1], current[0][2]+grid_size[2])) # Right pos
 
     surrounding_struct = []
     for pos in surrounding_pos:
