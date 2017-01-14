@@ -8,7 +8,7 @@ room_widths = [3, 3, 3, 5, 5, 5, 7, 7, 11]
 room_heights = [2, 3, 3, 4, 4]
 stair_widths = [5, 5, 7, 13]
 stair_heights = [3, 7, 11, 13, 17]
-level_bounds = [15, 15, 15]
+level_bounds = [50, 50, 50]
 room_number = 5
 
 class Chamber ( object ):
@@ -56,8 +56,8 @@ class dungeon_generator(object):
   def generate_world_data( self ):
     room = self.make_random_chamber()
     stairs = self.make_random_chamber( False )
-    room.doors = [ [0, 1, 0] ]
-    stairs.doors = [ [1, 1, 0], [1, stairs.size[1] - 1, 2] ]
+    room.doors = [ (0, 1, 0) ]
+    stairs.doors = [ (1, 1, 0), (1, stairs.size[1] - 1, 2) ]
     self.chambers.append( room )
     self.chambers.append( stairs )
     # add_random_doors( room )
@@ -70,7 +70,7 @@ class dungeon_generator(object):
   def build( self ):
     nodes = []
     for chamber_data in self.chambers:
-      nodes.append( self.chamber_generator_instance.generate_chamber( chamber_data ) )
+      nodes.extend( self.chamber_generator_instance.generate_chamber( chamber_data ) )
     return nodes
 
   def generate( self ):
