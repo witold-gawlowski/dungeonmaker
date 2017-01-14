@@ -57,7 +57,7 @@ class dungeon_generator(object):
     room = self.make_random_chamber()
     stairs = self.make_random_chamber( False )
     room.doors = [ (0, 1, 0) ]
-    stairs.doors = [ (1, 1, 0), (1, stairs.size[1] - 1, 2) ]
+    stairs.doors = [ (1, 0, 0), (1, stairs.size[1] - 1, 2) ]
     self.chambers.append( room )
     self.chambers.append( stairs )
     # add_random_doors( room )
