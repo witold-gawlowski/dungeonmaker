@@ -50,23 +50,34 @@ class dungeon_generator(object):
   def build_from_world_file():
     return "todo"
 
-  def generate_world_data():
-    starting_room = self.make_random_chamber()
+  def build_doors_between( room_A, room_B ):
+    return "todo"
+
+  def generate_world_data( self ):
+    room = self.make_random_chamber()
+    stairs = self.make_random_chamber( False )
+    room.doors = [ [0, 1, 0] ]
+    stairs.doors = [ [1, 1, 0], [1, stairs.size[1] - 1, 2] ]
+    self.chambers.append( room )
+    self.chambers.append( stairs )
     # add_random_doors( room )
     # self.rooms.append( starting_room )
     # previous_room = starting_room
     # for i in range( room_number ):
     #  new_room = make_random_room_at( doors )
-    return "todo"
+
 
   def build( self ):
-    for chamber in self.chambers:
-      self.chamber_generator_instance.generate_chamber(
+    nodes = []
+    for chamber_data in self.chambers:
+      nodes.append( self.chamber_generator_instance.generate_chamber( chamber_data ) )
+    return nodes
 
   def generate( self ):
     # build_from_world_file()
-    generate_world_data ()
-    build( self )
+    self.generate_world_data ()
+    nodes = self.build()
+    return nodes
 
     
 
