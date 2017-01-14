@@ -33,10 +33,10 @@ class dungeon_generator(object):
       dimensions = [room_widths, room_widths, room_heights]
     else:
       dimensions = [stair_widths, stair_widths, stair_heights]
-    size = list (map( random.choice, dimensions ) )
+    size = tuple (map( random.choice, dimensions ) )
     bounds = [ i - j for i, j in zip( level_bounds, size ) ]
     position = map ( lambda x: random.randint(*x), [[0, bounds[0]], [0, bounds[1]], [0, bounds[2]]] )
-    return Chamber( position = list( position ), size = size, is_room = is_room )
+    return Chamber( position = tuple( position ), size = size, is_room = is_room )
 
   ''' inflates all the chambers, adds 
   the encountered chambers to the pairs of rooms candidating for door addition '''
@@ -69,8 +69,8 @@ class dungeon_generator(object):
 
   def build( self ):
     nodes = []
-    for chamber_data in self.chambers:
-      nodes.extend( self.chamber_generator_instance.generate_chamber( chamber_data ) )
+    for chamber in self.chambers:
+      nodes.extend( self.chamber_generator_instance.generate_chamber( chamber ) )
     return nodes
 
   def generate( self ):
