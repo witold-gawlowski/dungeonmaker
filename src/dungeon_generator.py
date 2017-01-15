@@ -9,7 +9,7 @@ room_widths = [3, 3, 3, 5, 5, 5, 7, 7, 11]
 room_heights = [2, 3, 3, 4, 4]
 stair_widths = [5, 5, 7, 13]
 stair_heights = [3, 7, 11, 13, 17]
-level_bounds = [50, 50, 50]
+level_bounds = [40, 40, 40]
 room_number = 5
 room_chance  = 0.5
 room_attempts = 10
@@ -116,20 +116,21 @@ class dungeon_generator(object):
   def add_doors( self ):
     for chamber in self.chambers:
       slots = self.get_door_slots ( chamber )
-      pairs = itertools.product( slots, [chamber] )
+      pairs = list( itertools.product( slots, [chamber] ) )
       self.door_slots.update( pairs )
      
     for pos, chamber in self.door_slots.items():
       for d in [(-1, 0, 0), (1, 0, 0), (0, 1, 0), (0, -1, 0)]:
-        new_pos = map( sum, zip( d, pos ) )
+        new_pos = tuple( map( sum, zip( d, pos ) ) )
         neighbour = self.door_slots.get( new_pos )
-        if neighbour and neighbour is not chamber:
-          if ( neighbour, chamber ) not in self.chamber_connections:
-            ( pos, new_pos ) = self.pull_down( pos, new_pos )
-            chamber.doors.append( pos )
-            neighbour.doors.append( new_pos )
-            self.chamber_connections.append( ( chamber, neighbour ) )
-            self.chamber_connections.append( ( neighbour, chamber ) )
+        if neighbour:
+          if neighbour is not chamber:
+            if ( neighbour, chamber ) not in self.chamber_connections:
+              ( pos, new_pos ) = self.pull_down( pos, new_pos )
+              chamber.doors.append( pos )
+              neighbour.doors.append( new_pos )
+              self.chamber_connections.append( ( chamber, neighbour ) )
+              self.chamber_connections.append( ( neighbour, chamber ) )
 
   def generate_world_data( self ):
     for i in range( room_attempts ):
