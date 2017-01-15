@@ -69,7 +69,13 @@ class chamber_generator:
     if are_bottom_lvl( doors_specs, chamber.position[0] ):
       result = self.rg.create_room( doors_specs, chamber_specs )
     elif len( doors_specs ) > 1:
-      result = self.sg.create_stairs( doors_specs, chamber_specs )
+      result = self.sg.create_stairwell( doors_specs, chamber_specs )
+    
+      ### Robs testing
+    #doors = [(4,-16,0), (-4,20,8)]
+    #bounds = [((0,0,0),(10,10,5))]
+    #result = self.sg.create_stairwell(doors, bounds)
+
     return result
 
 
