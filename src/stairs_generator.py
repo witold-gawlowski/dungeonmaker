@@ -70,7 +70,6 @@ class stairs_generator:
 
     print("Stairs Shell complete with ", len(nodes), " tiles and took ", (time.time() - start_time), " seconds")
 
-
     self.create_stairs(nodes, doors, bounds)
 
     print("Stairwell Generation complete with ", len(nodes), " tiles and took ", (time.time() - start_time), " seconds")
@@ -142,8 +141,9 @@ class stairs_generator:
     start_time = time.time()
     tile_size = 4;
    
-    off_limits_shapes = [((6,6,0),(4,10,10)),
-                         ((14,6,0),(4,10,10))]
+    off_limits_shapes = [((0,0,0),(0,0,0))]
+
+    in_limits_shapes = [((bounds[0][0]),(bounds[0][1][0]-2,bounds[0][1][1]-2,bounds[0][1][2]))]
 
     grid_size = (4,4,1)
 
@@ -155,83 +155,23 @@ class stairs_generator:
     #start_pos = (self.tile_handler.snap_grid_center(door_A_pos,grid_size), (0,0,0),(0,0,0))
     start_pos = ((doors[0][0],doors[0][1]+4,doors[0][2]),(0,0,0),(0,0,0))
     #end_pos = (self.tile_handler.snap_grid_center(door_B_pos,grid_size), (0,0,0),(0,0,0))
-    end_pos = ((doors[1][0],doors[1][1],doors[1][2]),(0,0,0),(0,0,0))
-
-    open = []
-    closed = []
+    end_pos = ((doors[1][0],doors[1][1]-4,doors[1][2]),(0,0,0),(0,0,0))
     
-    current_pos = start_pos
-    closed.append(current_pos)
 
-    # Create the Walkable Areas
-    walkable = []
-    # door A
-    walkable.append(((bounds[0][0][0],bounds[0][0][1],doors[0][2]),(bounds[0][1][0],bounds[0][1][1],1)) )
+
+    wp1 = ((4,4,2), (0,0,0),(0,0,0))
+    wp2 = ((4,16,2),(0,0,0),(0,0,0))
+    collected_journey = []
+    collected_journey = self.create_path(start_pos,wp1, grid_size,in_limits_shapes,off_limits_shapes)
+    collected_journey += self.create_path(wp1,wp2, grid_size,in_limits_shapes,off_limits_shapes)
+
+
     
-    highCounter = bounds[0][0][2]
-    is_full_area = True
-    while highCounter < bounds[0][1][2]:
-      if is_full_area:
-        x = random.randrange((bounds[0][0][0]-bounds[0][1][0]),(bounds[0][0][0]+bounds[0][1][0]))
-        y = random.randrange((bounds[0][0][1]-bounds[0][1][1]),(bounds[0][0][1]+bounds[0][1][1]))
-        walkable.append(((x,y,bounds[0][0][2]+highCounter),(6,6,1)))       
-        is_full_area = False
-        highCounter += 1
-      else:
-        walkable.append(((bounds[0][0][0],bounds[0][0][1],bounds[0][0][2]+highCounter),(bounds[0][1][0],bounds[0][1][1],1)))       
-        is_full_area = True
-        highCounter += 1
+    collected_journey.reverse()
 
-    # door B
-    #walkable.append(((bounds[0][0][0],bounds[0][0][1],doors[1][2]),(bounds[0][1][0],bounds[0][1][1],1)) )
-   
-
-
-
-
-    # get lowest f_cost 
-    #current_pos = min(open, key=lambda L: L[1][2])
-    allow_upper_pos = True
-    
-    #while current_pos is not end_pos:
-    while not (current_pos[0][0] == end_pos[0][0] and current_pos[0][1] == end_pos[0][1] and current_pos[0][2] == end_pos[0][2]):
-      #print = current_pos[0] +end_pos[
-      self.tile_handler.get_surrounding_pos(open, closed, current_pos, grid_size, start_pos[0], end_pos[0],walkable,allow_upper_pos) 
-   
-      
-      # Sorts by F_cost then by H_cost
-      # open = sorted(open, key=lambda L: (L[1][2],L[1][1]))
-
-      open = sorted(open, key=lambda L: (L[1][1],L[1][2]))
-
-      if (current_pos[0][2] - open[0][0][2]) == 0:
-        allow_upper_pos = True
-      else:
-        allow_upper_pos = False
-
-      current_pos = open[0]
-      
-      open.pop(0)
-      closed.append(current_pos)
-      #print (current_pos)
-    
-      
-    print("Path Found ... Building In Progress")
-
-    choosen_path = []
-
-    while not (current_pos[0][0] == start_pos[0][0] and current_pos[0][1] == start_pos[0][1] and current_pos[0][2] == start_pos[0][2]):
-      for j in closed:
-        if current_pos[2] == j[0]:
-          choosen_path.append(j[0])
-          current_pos = j     
-
-  
-    choosen_path.reverse()
-
-    pre_pos = choosen_path[0]
+    pre_pos = collected_journey[0]
     rotation = 0
-    for index, cp in enumerate(choosen_path):
+    for index, cp in enumerate(collected_journey):
       # On Top
       if cp[0] < pre_pos[0]:
         rotation = 0
@@ -257,7 +197,58 @@ class stairs_generator:
     #nodes.append(("Floor_Door_Way_4x4x4", (doors[1][0]-4,doors[1][1],doors[1][2]), 180))
 
 
-    print("Doors Connected with", len(choosen_path), " tiles in a time of ", time.time() - start_time )
+    print("Doors Connected with", len(collected_journey), " tiles in a time of ", time.time() - start_time )
     return nodes
 
   #------- End Create Stairs ---------------------
+
+
+  def create_path(self, start, end, grid_size, in_bounds, off_bounds):
+    
+    open = []
+    closed = []
+
+    current_pos = start
+    closed.append(current_pos)
+
+  
+
+    # get lowest f_cost 
+    #current_pos = min(open, key=lambda L: L[1][2])
+    allow_upper_pos = True
+    
+    #while current_pos is not end_pos:
+    while not (current_pos[0][0] == end[0][0] and current_pos[0][1] == end[0][1] and current_pos[0][2] == end[0][2]):
+      #print = current_pos[0] +end_pos[
+      self.tile_handler.get_surrounding_pos(open, closed, current_pos, grid_size, start[0], end[0],in_bounds,off_bounds,allow_upper_pos) 
+   
+      
+      # Sorts by F_cost then by H_cost
+      # open = sorted(open, key=lambda L: (L[1][2],L[1][1]))
+
+      open = sorted(open, key=lambda L: (L[1][1],L[1][2]))
+
+      if (current_pos[0][2] - open[0][0][2]) == 0:
+        allow_upper_pos = True
+      else:
+        allow_upper_pos = False
+
+      current_pos = open[0]
+      
+      open.pop(0)
+      closed.append(current_pos)
+      #print (current_pos)
+    
+      
+    print("Path Found ... Building In Progress")
+
+    choosen_path = []
+
+    while not (current_pos[0][0] == start[0][0] and current_pos[0][1] == start[0][1] and current_pos[0][2] == start[0][2]):
+      for j in closed:
+        if current_pos[2] == j[0]:
+          print("Appending CP: ", j[0])
+          choosen_path.append(j[0])
+          current_pos = j     
+
+    return choosen_path

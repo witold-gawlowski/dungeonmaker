@@ -197,7 +197,7 @@ class tile_handler:
 
     return False
 
-  def get_surrounding_pos(self, open, closed, current, grid_size, start, end,walkable_area, allow_upper_positions):
+  def get_surrounding_pos(self, open, closed, current, grid_size, start, end,in_limits, off_limits, allow_upper_positions):
     
     surrounding_pos = []
     # Same grid Level
@@ -218,12 +218,13 @@ class tile_handler:
       surrounding_struct.append((pos, self.calc_ghf_cost(start,end,pos),current[0]))
 
     for struct in surrounding_struct:
-      if self.in_shape_range(walkable_area,struct[0],4):
-        if not self.in_the_list(struct[0],closed[0]):
-          if len(open) == 0:
-            open.append(struct)
-          elif not self.in_the_list(struct[0],open[0]):
-            open.append(struct)
+      if self.in_shape_range(in_limits,struct[0],4):
+        if not self.in_shape_range(off_limits,struct[0],1):
+          if not self.in_the_list(struct[0],closed[0]):
+            if len(open) == 0:
+              open.append(struct)
+            elif not self.in_the_list(struct[0],open[0]):
+              open.append(struct)
 
 
     return open
