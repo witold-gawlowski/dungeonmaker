@@ -72,19 +72,19 @@ class stairs_generator:
     
 
     # WALL FILL FROM BOTTOM
-    heightA = shape[len(shape)-1][1][2]
-    for i in range(heightA-2):
-      todo = self.tile_handler.create_todo(edges, nodes, ["Wall_St_Bottom"])
-      nodes = self.tile_handler.complete_todo(todo, edges, nodes, bounds, door_mask, "Mid_Wall_4x4x4", False)
-      todo = self.tile_handler.create_todo(edges, nodes, ["Wall_L_Bottom"])
-      nodes = self.tile_handler.complete_todo(todo, edges, nodes, bounds, door_mask, "Mid_Wall_L_4x4x4", False)
+    #heightA = shape[len(shape)-1][1][2]
+    #for i in range(heightA-2):
+      #todo = self.tile_handler.create_todo(edges, nodes, ["Wall_St_Bottom"])
+      #nodes = self.tile_handler.complete_todo(todo, edges, nodes, bounds, door_mask, "Mid_Wall_4x4x4", False)
+      #todo = self.tile_handler.create_todo(edges, nodes, ["Wall_L_Bottom"])
+      #nodes = self.tile_handler.complete_todo(todo, edges, nodes, bounds, door_mask, "Mid_Wall_L_4x4x4", False)
     
     # CEILING WALL TOP =================================================
-    todo = self.tile_handler.create_todo(edges, nodes, ["Ceiling_Flat"])
-    nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, shape, "Ceiling_Wall_4x4x4", False)
+    #todo = self.tile_handler.create_todo(edges, nodes, ["Ceiling_Flat"])
+    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, shape, "Ceiling_Wall_4x4x4", False)
 
-    todo = self.tile_handler.create_todo(edges, nodes, ["Ceiling_Wall_End"])
-    nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, shape, "Ceiling_Wall_L_4x4x4", False)
+    #todo = self.tile_handler.create_todo(edges, nodes, ["Ceiling_Wall_End"])
+    #nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, shape, "Ceiling_Wall_L_4x4x4", False)
 
 
     print("Stairs Shell complete with ", len(nodes), " tiles and took ", (time.time() - start_time), " seconds")
@@ -178,12 +178,35 @@ class stairs_generator:
     
 
 
-    wp1 = ((4,4,2), (0,0,0),(0,0,0))
-    wp2 = ((4,16,2),(0,0,0),(0,0,0))
-    collected_journey = []
-    collected_journey = self.create_path(start_pos,wp1, grid_size,in_limits_shapes,off_limits_shapes)
-    collected_journey += self.create_path(wp1,wp2, grid_size,in_limits_shapes,off_limits_shapes)
+    path_wps = []
 
+    path_wps.append(start_pos)
+    path_wps.append(end_pos)
+    
+    current_counter = 0
+
+    #while not current_counter >= abs(end_pos[0][2]-start_pos[0][2])-1:
+    #  rand_x = random.randint(bounds[0][0][0]-((bounds[0][1][0]*0.5)-2),bounds[0][0][0]+((bounds[0][1][0]*0.5)-2))
+    #  rand_y = random.randint(bounds[0][0][1]-((bounds[0][1][1]*0.5)-2),bounds[0][0][1]+(bounds[0][1][1]*0.5)-2)
+    #  rand_z = random.randint(1,2)
+      
+    #  current_counter += rand_z
+
+    #  path_wps.append(((rand_x*2,rand_y*2,current_counter),(0,0,0),(0,0,0)))
+    
+
+
+
+
+
+
+    path_wps = sorted(path_wps, key=lambda L: (L[0][2]))
+    
+
+    collected_journey = []
+    for index in range(len(path_wps)-1):
+      collected_journey += self.create_path(path_wps[index],path_wps[index+1], grid_size,in_limits_shapes,off_limits_shapes)
+      
 
     
     collected_journey.reverse()
@@ -266,7 +289,7 @@ class stairs_generator:
     while not (current_pos[0][0] == start[0][0] and current_pos[0][1] == start[0][1] and current_pos[0][2] == start[0][2]):
       for j in closed:
         if current_pos[2] == j[0]:
-          print("Appending CP: ", j[0])
+          #print("Appending CP: ", j[0])
           choosen_path.append(j[0])
           current_pos = j     
 
