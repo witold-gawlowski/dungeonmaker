@@ -28,8 +28,8 @@ class stairs_generator:
 
     nodes = []
 
-    nodes.append(("Floor_Door_Way_4x4x4",doors[0],0))
-    nodes.append(("Floor_Door_Way_4x4x4",doors[1],180))
+    #nodes.append(("Floor_Door_Way_4x4x4",doors[0],0))
+    #nodes.append(("Floor_Door_Way_4x4x4",doors[1],180))
 
     pos = self.tile_handler.start_position_in_shape(shape, tile_size)
     pos = tile_util.xyz_round((pos[0], pos[1]-tile_size*0.5, bounds[0][0][2]))
@@ -53,20 +53,39 @@ class stairs_generator:
     todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Wall_End"])
     nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, door_mask, "Floor_Wall_L_4x4x4", False)
 
-    # WALL FILL
-    #heightA = shape[len(shape)-1][1][2]
-    #for i in range(heightA-2):
-    #  todo = self.tile_handler.create_todo(edges, nodes, ["Wall_St_Bottom"])
-    #  nodes = self.tile_handler.complete_todo(todo, edges, nodes, bounds, None, "Mid_Wall_4x4x4", False)
-    #  todo = self.tile_handler.create_todo(edges, nodes, ["Wall_L_Bottom"])
-    #  nodes = self.tile_handler.complete_todo(todo, edges, nodes, bounds, None, "Mid_Wall_L_4x4x4", False)
+    # CREATE DOORS ==================================================================
+    todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Flat"])
+    nodes = self.tile_handler.complete_todo(todo, edges, nodes, door_mask, None, "Floor_Door_Way_4x4x4", False) 
 
+ 
+
+    # FILL SPACE ABOVE DOOR ==========================================================
+    
+    for door in doors:
+      if not door [2] == bounds[0][0][2]:
+        nodes.append(("Floor_Door_Way_4x4x4",door,0)) 
+        
+        relative_door = (door[2] - bounds[0][0][2])
+        space_above_door = (bounds[0][1][2]-3) - (relative_door*0.25)
+        for i in range(int(space_above_door)+1):
+          nodes.append(("Mid_Wall_4x4x4",(door[0],door[1],door[2]+((i+1)*4)),0))
+    
+
+    # WALL FILL FROM BOTTOM
+    heightA = shape[len(shape)-1][1][2]
+    for i in range(heightA-2):
+      todo = self.tile_handler.create_todo(edges, nodes, ["Wall_St_Bottom"])
+      nodes = self.tile_handler.complete_todo(todo, edges, nodes, bounds, door_mask, "Mid_Wall_4x4x4", False)
+      todo = self.tile_handler.create_todo(edges, nodes, ["Wall_L_Bottom"])
+      nodes = self.tile_handler.complete_todo(todo, edges, nodes, bounds, door_mask, "Mid_Wall_L_4x4x4", False)
+    
     # CEILING WALL TOP =================================================
     todo = self.tile_handler.create_todo(edges, nodes, ["Ceiling_Flat"])
     nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, shape, "Ceiling_Wall_4x4x4", False)
 
     todo = self.tile_handler.create_todo(edges, nodes, ["Ceiling_Wall_End"])
     nodes = self.tile_handler.complete_todo(todo, edges, nodes, None, shape, "Ceiling_Wall_L_4x4x4", False)
+
 
     print("Stairs Shell complete with ", len(nodes), " tiles and took ", (time.time() - start_time), " seconds")
 
@@ -78,7 +97,7 @@ class stairs_generator:
   def makeDoorMask(self, doors):
     mask = []
     for door in doors:
-      mask.append(((door[0]*0.5,door[1]*0.5,door[2]),(1,1,1)))
+      mask.append(((door[0],door[1],door[2]),(1,1,0.25)))
 
     mask = self.tile_handler.snap_room_center(mask, self.tile_handler.tile_size)
     return mask
