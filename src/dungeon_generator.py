@@ -5,11 +5,11 @@ import fbx
 import random
 import itertools
 
-room_widths = [3, 3, 3, 5, 5, 5, 7, 7, 11]
-room_heights = [2, 3, 3, 4, 4]
-stair_widths = [5, 5, 7, 13]
-stair_heights = [3, 7, 11, 13, 17]
-level_bounds = [40, 40, 40]
+room_widths = [3, 3, 3]# , 5, 5, 5, 7, 7, 11]
+room_heights = [2, 3, 3]#, 4, 4]
+stair_widths = [5, 5]#, 7, 13]
+stair_heights = [3, 5]#, 11, 13, 17]
+level_bounds = [30, 30, 30]
 room_number = 5
 room_chance  = 0.5
 room_attempts = 10
@@ -138,8 +138,12 @@ class dungeon_generator(object):
       if ( self.collides ( candidate ) ):
         continue
       self.chambers.append( candidate ) 
-      self.grow_chambers()
-      self.add_doors()
+    self.grow_chambers()
+    self.add_doors()
+      
+    ''' remove chambers with no doors'''
+    self.chambers = [ x for x in self.chambers if len( x.doors ) > 0 ]
+      
 
   
   def build_from_world_file( self ):
@@ -164,10 +168,10 @@ class dungeon_generator(object):
 
   def copy_node_with_children( self, source , node_processor = lambda x: x):
     dest_node = fbx.FbxNode.Create( self.scene, source.GetName() )
-    self.components.append( source.GetNodeAttribute().Clone(fbx.FbxObject.eDeepClone, None) )
+    self.components.append( source.GetNodeAttribute().Clone(fbx.FbxObject.eDeepClone, None ) )
     dest_node.SetNodeAttribute( self.components[-1] )
-    dest_node.LclTranslation.Set(source.LclTranslation.Get())
-    dest_node.LclRotation.Set(source.LclRotation.Get())
+    dest_node.LclTranslation.Set( source.LclTranslation.Get() )
+    dest_node.LclRotation.Set( source.LclRotation.Get() )
 
     node_processor( dest_node )
 
