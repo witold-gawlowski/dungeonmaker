@@ -11,12 +11,15 @@ def are_bottom_lvl( doors_list, chamber_min_z):
       return False
   return True
 
-''' converting doors from relative tile to world tile coordinates. only integral values. '''
-def convert_door_specs( door_list , chamber_position ):
+''' converting doors from relative tile to absolute tile coordinates. only integral values. '''
+def convert_door_specs( door_list , chamber_position , tile_size ):
   result = []
-  for doors in door_list:
-    new_doors = tuple ( [ i + j for i, j in zip( doors, chamber_position ) ] )
-    result.append( new_doors )
+  for door in door_list:
+    x = chamber_position[0] * tile_size + tile_size * 0.5 + door[0] * tile_size
+    y = chamber_position[1] * tile_size + tile_size * 0.5 + door[1] * tile_size
+    new_door = (x, y, door[2])
+    #new_door = tuple ( [ i * tile_size + (j * tile_size)+(tile_size*0.5) for i, j in zip( door, chamber_position ) ] 
+    result.append( new_door )
   return result
 
 def print_chamber_specs( specs ):
@@ -28,17 +31,17 @@ def print_doors_specs( spec_list ):
     print ( doors )
 
 ''' converting to room/stairs coordinates '''
-def convert_chamber_specs (  specs ):
-  new_position = (specs[0][0] + specs[1][0] / 2, specs[0][1] + specs[1][1] / 2, specs[0][2] )
+def convert_chamber_specs ( specs , tile_size ):
+  new_position = (specs[0][0] * tile_size + specs[1][0] * tile_size * 0.5, specs[0][1] * tile_size + specs[1][1] * tile_size * 0.5, specs[0][2] * tile_size )
   return [ ( new_position, specs[1] ) ]
 
 class chamber_generator:
   def __init__( self, top_level ):
 
-    tile_h = tile_handler.tile_handler(top_level)
+    self.tile_h = tile_handler.tile_handler(top_level)
 
-    self.rg = room_generator.room_generator(tile_h) 
-    self.sg = stairs_generator.stairs_generator(tile_h)
+    self.rg = room_generator.room_generator(self.tile_h) 
+    self.sg = stairs_generator.stairs_generator(self.tile_h)
   # dungeon_generator coordinates:
   # each chamber is in format of ( ( pos_x, pos_y, pos_z ) , ( size_x, size_y, size_z ) )
   # pos_xyz specify xyz tile coordinates of the corner of a chamber wih smallest coordinates.
@@ -57,15 +60,19 @@ class chamber_generator:
     # position as tile space position of smallest corner
     chamber_specs =  ( ( chamber.position , chamber.size ) )
 
-
+    print (chamber_specs)
+    print (chamber.doors)
 
     # converting from dungeon_generator specs to chamber_generator specs
-    chamber_specs = convert_chamber_specs ( chamber_specs ) 
-    doors_specs = convert_door_specs( chamber.doors, chamber.position )
+    chamber_specs = convert_chamber_specs ( chamber_specs, self.tile_h.tile_size ) 
+    doors_specs = convert_door_specs( chamber.doors, chamber.position , self.tile_h.tile_size )
+
+
 
     print_chamber_specs( *chamber_specs )
     print_doors_specs ( doors_specs )
-    
+
+
     if are_bottom_lvl( doors_specs, chamber.position[0] ):
       result = self.rg.create_room( doors_specs, chamber_specs )
     elif len( doors_specs ) > 1:

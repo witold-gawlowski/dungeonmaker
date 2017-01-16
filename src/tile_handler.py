@@ -236,9 +236,9 @@ class tile_handler:
         roomCenter = (roomCenter[0] - (roomCenter[0] % scale), roomCenter[1], roomCenter[2])
       if not roomCenter[1] % scale == 0:
         roomCenter = (roomCenter[0], roomCenter[1] - (roomCenter[1] % scale), roomCenter[2])
-      if size[0] % 2 == 0:
+      if not size[0] % 2 == 0:
         roomCenter = (roomCenter[0]+(scale*0.5), roomCenter[1], roomCenter[2])
-      if size[1] % 2 == 0:
+      if not size[1] % 2 == 0:
         roomCenter = (roomCenter[0], roomCenter[1]+(scale*0.5), roomCenter[2])
       shape[i] = (roomCenter, size)
     return shape
