@@ -43,8 +43,8 @@ class stairs_generator:
     
     # CEILING ==============================================
     # Sort the shape in order of tallest square to shortest square
-    shape = sorted(shape, key = lambda tup: tup[1][2], reverse = True)
-    self.makeCeiling(edges, nodes, shape, None)
+    #shape = sorted(shape, key = lambda tup: tup[1][2], reverse = True)
+    #self.makeCeiling(edges, nodes, shape, None)
     
     # WALLS BASE =================================================
     todo = self.tile_handler.create_todo(edges, nodes, ["Floor_Flat"])
@@ -89,7 +89,7 @@ class stairs_generator:
 
     print("Stairs Shell complete with ", len(nodes), " tiles and took ", (time.time() - start_time), " seconds")
 
-    self.create_stairs(nodes, doors, bounds)
+    self.create_stairs(nodes, doors, shape)
 
     print("Stairwell Generation complete with ", len(nodes), " tiles and took ", (time.time() - start_time), " seconds")
     return nodes
@@ -154,7 +154,7 @@ class stairs_generator:
   # END ============ make_room_dimentions
 
 
-  def create_stairs(self,nodes, doors, bounds):
+  def create_stairs(self,nodes, doors, shape):
  
     print("Searching for the fastest path ... ")
     start_time = time.time()
@@ -162,7 +162,7 @@ class stairs_generator:
    
     off_limits_shapes = [((0,0,0),(0,0,0))]
 
-    in_limits_shapes = [((bounds[0][0]),(bounds[0][1][0]-2,bounds[0][1][1]-2,bounds[0][1][2]))]
+    in_limits_shapes = [((shape[0][0]),(shape[0][1][0]+4,shape[0][1][1]+4,shape[0][1][2]+4))]
 
     grid_size = (4,4,1)
 
@@ -174,30 +174,38 @@ class stairs_generator:
     #start_pos = (self.tile_handler.snap_grid_center(door_A_pos,grid_size), (0,0,0),(0,0,0))
     start_pos = ((doors[0][0],doors[0][1]+4,doors[0][2]),(0,0,0),(0,0,0))
     #end_pos = (self.tile_handler.snap_grid_center(door_B_pos,grid_size), (0,0,0),(0,0,0))
-    end_pos = ((doors[1][0],doors[1][1]-4,doors[1][2]),(0,0,0),(0,0,0))
+    end_pos = ((doors[1][0],doors[1][1],doors[1][2]),(0,0,0),(0,0,0))
     
-
+    half_tile = tile_size*0.5
+    x_length = (shape[0][1][0]*half_tile)-half_tile
+    y_length = (shape[0][1][1]*half_tile)-half_tile
+    xy_wps = [(shape[0][0][0]-x_length,shape[0][0][1]+y_length),
+              (shape[0][0][0]+x_length,shape[0][0][1]+y_length),
+              (shape[0][0][0]+x_length,shape[0][0][1]-y_length),
+              (shape[0][0][0]-x_length,shape[0][0][1]-y_length)]
 
     path_wps = []
 
-    path_wps.append(start_pos)
+    #path_wps.append(start_pos)
     path_wps.append(end_pos)
     
-    current_counter = 0
 
-    #while not current_counter >= abs(end_pos[0][2]-start_pos[0][2])-1:
-    #  rand_x = random.randint(bounds[0][0][0]-((bounds[0][1][0]*0.5)-2),bounds[0][0][0]+((bounds[0][1][0]*0.5)-2))
-    #  rand_y = random.randint(bounds[0][0][1]-((bounds[0][1][1]*0.5)-2),bounds[0][0][1]+(bounds[0][1][1]*0.5)-2)
-    #  rand_z = random.randint(1,2)
+
+    currentZ_counter = start_pos[0][2]
+    wp_counter = 0
+    isStairs = True
+    while currentZ_counter-4 <= end_pos[0][2]:
+
+      if isStairs == True:
+        currentZ_counter += random.randint(1,3)
+        wp_counter +=2
+        isStairs = False
+      elif isStairs == False:
+        wp_counter += 3
+        isStairs = True
+
+      path_wps.append(((xy_wps[wp_counter%4][0],xy_wps[wp_counter%4][1],currentZ_counter),(0,0,0),(0,0,0)))
       
-    #  current_counter += rand_z
-
-    #  path_wps.append(((rand_x*2,rand_y*2,current_counter),(0,0,0),(0,0,0)))
-    
-
-
-
-
 
 
     path_wps = sorted(path_wps, key=lambda L: (L[0][2]))
