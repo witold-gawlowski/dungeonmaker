@@ -15,8 +15,6 @@ class room_generator:
     self.tile_handler = tile_handler
     random.seed(time.time())
 
-
-
   def create_room(self, doors, bounds):
     start_time = time.time()
     print("Creating room ... ")
@@ -32,6 +30,12 @@ class room_generator:
 
     pillars = self.make_pillars(shape)
     pillars = self.tile_handler.snap_room_center(pillars, tile_size)
+
+    # Check that the input parameters have been succsefully converted to usable room values.
+    if( not doors ):
+      raise ValueError("Failure to create room, received %d doors. Room requires at minimum 1 door.", len(doors))
+    if( not shape ):
+      raise ValueError("Failure to create a room shape from the given bounds: ", bounds)
 
     nodes = []
 
