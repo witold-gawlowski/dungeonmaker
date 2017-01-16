@@ -353,3 +353,48 @@ class tile_handler:
 
     return nodes
   ## ======== END complete_todo
+
+
+
+  def makeCeiling(self, edges, nodes, shape, w_mask):
+    tile_size = self.tile_size
+    mask = [] + ([] if w_mask is None else w_mask)
+    last_height = 0;
+    
+    for i in range(len(shape)):
+      ceilingNodes = []
+      square = shape[i]
+
+      if last_height > square[1][2]: 
+        for j in range(len(mask)):
+          (roomCenter, size) = mask[j]
+          size = (size[0]+2,size[1]+2,size[2]) # Make space for walls
+          mask[j] = ((roomCenter, size))
+
+      pos = (0,0,0)
+      angle = 0
+      todo = []
+      point = [0, 0]
+      # Calculate for x then y
+      for i in range(2):
+        if square[1][i] % 2 == 0:
+          point[i] = (square[0][i] - tile_size*0.5) - ((square[1][i]*0.5-1)*tile_size)
+        else:
+          point[i] = square[0][i]  - ((square[1][i]-1) * 0.5 * tile_size)
+
+      # This loops over every cell in the shape and creates an unsatisfied edge to add to the todo list if the cell is not in mask range.
+      # equivalent to  for(int x = point[0]; x < point[0]+square[1][0]*tile_size; x += tile_size)
+      for x in range(int(point[0]), int(point[0]+square[1][0]*tile_size), int(tile_size)):
+        for y in range(int(point[1]), int(point[1]+square[1][1]*tile_size), int(tile_size)):
+          if not self.in_shape_range(mask, (x, y, square[1][2]), tile_size):
+            pos = tile_util.xyz_round((x, y - tile_size * 0.5, square[0][2] + tile_size * square[1][2]))
+            todo.append((pos, angle, "Ceiling_Flat", False))
+             
+
+      ceilingNodes = self.complete_todo(todo, edges, ceilingNodes, [square], mask, "Ceiling_Floor_2x2", False)
+      
+      mask.append(square)
+      last_height = square[1][2]
+
+      nodes += ceilingNodes
+  # END ============ makeCeiling
