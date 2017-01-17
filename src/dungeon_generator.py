@@ -183,7 +183,7 @@ class dungeon_generator(object):
     chamber7.position = (0, 5, 0)
     chamber7.size = (10, 25, 6)
     chamber7.doors = []
-    chamber7.doors.append( ( 2, 23, 0 ) )
+    chamber7.doors.append( ( 2, 24, 0 ) )
     chamber7.doors.append( ( 9, 7, 0 ) )
 
     chamber8.position = (0, 30, 0)
