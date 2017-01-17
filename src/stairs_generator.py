@@ -187,28 +187,28 @@ class stairs_generator:
     path_wps = []
 
     #path_wps.append(start_pos)
-    path_wps.append(end_pos)
     
 
 
     currentZ_counter = start_pos[0][2]
     wp_counter = 0
-    isStairs = True
-    while currentZ_counter-4 <= end_pos[0][2]:
+    isStairs = False
+    while currentZ_counter+8 <= doors[1][2]:
 
       if isStairs == True:
-        currentZ_counter += random.randint(1,3)
-        wp_counter +=2
+        currentZ_counter += random.randint(1,2)*4
+        wp_counter +=1
         isStairs = False
       elif isStairs == False:
-        wp_counter += 3
+        wp_counter += 2
         isStairs = True
 
       path_wps.append(((xy_wps[wp_counter%4][0],xy_wps[wp_counter%4][1],currentZ_counter),(0,0,0),(0,0,0)))
       
+    path_wps.append(end_pos)
 
 
-    path_wps = sorted(path_wps, key=lambda L: (L[0][2]))
+    #path_wps = sorted(path_wps, key=lambda L: (L[0][2]))
     
 
     collected_journey = []
