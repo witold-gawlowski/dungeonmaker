@@ -1,0 +1,3 @@
+s-square-area:4
+l-square-area:12
+l-bounds-area:70

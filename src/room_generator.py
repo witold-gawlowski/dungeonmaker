@@ -14,6 +14,11 @@ class room_generator:
   def __init__(self, tile_handler):  
     self.tile_handler = tile_handler
     random.seed(time.time())
+    self.room_params = {}
+    with open("room_params.txt", "r") as ins:
+      for line in ins:
+        key_val_pair = line.split(':')
+        self.room_params[key_val_pair[0]] = int(key_val_pair[1])
 
   def create_room(self, doors, bounds):
     start_time = time.time()
@@ -171,7 +176,7 @@ class room_generator:
     squareA = (centerA, sizeA)
     squareB = (centerB, sizeB)
     
-    room_grandness = (16 if size_bounds[0]*size_bounds[1] < 100 else 36)
+    room_grandness = (self.room_params["s-square-area"] if size_bounds[0]*size_bounds[1] < self.room_params["l-bounds-area"] else self.room_params["l-square-area"])
 
     child_squares = []
     if (squareA[1][0]*squareA[1][1] > room_grandness and squareA[1][0] >= 2 and squareA[1][1] >= 2):
