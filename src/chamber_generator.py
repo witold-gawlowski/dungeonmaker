@@ -71,8 +71,7 @@ class chamber_generator:
 
     print_chamber_specs( *chamber_specs )
     print_doors_specs ( doors_specs )
-
-
+    
     if are_bottom_lvl( doors_specs, chamber.position[0] ):
       result = self.rg.create_room( doors_specs, chamber_specs )
     elif len( doors_specs ) > 1:

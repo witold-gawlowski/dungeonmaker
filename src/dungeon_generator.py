@@ -11,10 +11,10 @@ room_widths = [3, 3, 3]# , 5, 5, 5, 7, 7, 11]
 room_heights = [2, 3, 3]#, 4, 4]
 stair_widths = [5, 5]#, 7, 13]
 stair_heights = [3, 5]#, 11, 13, 17]
-level_bounds = [10, 7, 7]
+level_bounds = [10, 10, 10]
 room_number = 5
 room_chance  = 0.5
-room_attempts = 10
+room_attempts = 15
 
 class Chamber ( object ):
   def __init__(self, **kwargs):
@@ -180,7 +180,6 @@ class dungeon_generator(object):
       self.chambers.append( candidate )
 
     self.grow_chambers()
-
 
     self.add_doors()   
     for chamb in self.chambers:
