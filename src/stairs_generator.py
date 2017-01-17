@@ -57,14 +57,27 @@ class stairs_generator:
  
 
     # FILL SPACE ABOVE DOOR ==========================================================
-    
+    x_length = (shape[0][1][0]*2)-1
+    y_length = (shape[0][1][1]*2)-1
+
     for door in doors:  
       if not door [2] == bounds[0][0][2]:
-        nodes.append(("Floor_Door_Way_4x4x4",door,0)) 
+        rotation = 0
+        if door[0] >= (bounds[0][0][0] + x_length):
+          rotation = 270
+        elif door[0] <= (bounds[0][0][0] - x_length):
+          rotation = 90
+        elif door[1] >= (bounds[0][0][1] + y_length):
+          rotation = 180 
+        elif door[1] <= (bounds[0][0][1] - y_length):
+          rotation = 0
+        
+        nodes.append(("Floor_Door_Way_4x4x4",(door[0],door[1],door[2]),rotation))
+        print(("Floor_Door_Way_4x4x4",(door[0],door[1],door[2]),rotation))
         relative_door = (door[2] - bounds[0][0][2])
         space_above_door = (bounds[0][1][2]-3) - (relative_door*0.25)
         for i in range(int(space_above_door)+1):
-          nodes.append(("Mid_Wall_4x4x4",(door[0],door[1],door[2]+((i+1)*4)),0))
+          nodes.append(("Mid_Wall_4x4x4",(door[0],door[1],door[2]+((i+1)*4)),rotation+90))
     
 
     # WALL FILL FROM BOTTOM
@@ -156,7 +169,7 @@ class stairs_generator:
     start_time = time.time()
     tile_size = 4;
    
-    off_limits_shapes = [((0,0,0),(0,0,0))]
+    off_limits_shapes = [((0,0,0),(4,4,50))]
 
     in_limits_shapes = [((shape[0][0]),(shape[0][1][0]+4,shape[0][1][1]+4,shape[0][1][2]+4))]
 
@@ -168,7 +181,7 @@ class stairs_generator:
     #doors[1] = self.tile_handler.snap_to_edge(doors[1],grid_size)
 
     #start_pos = (self.tile_handler.snap_grid_center(door_A_pos,grid_size), (0,0,0),(0,0,0))
-    start_pos = ((doors[0][0],doors[0][1]+4,doors[0][2]),(0,0,0),(0,0,0))
+    start_pos = ((doors[0][0],doors[0][1],doors[0][2]),(0,0,0),(0,0,0))
     #end_pos = (self.tile_handler.snap_grid_center(door_B_pos,grid_size), (0,0,0),(0,0,0))
     end_pos = ((doors[1][0],doors[1][1],doors[1][2]),(0,0,0),(0,0,0))
     
@@ -182,17 +195,18 @@ class stairs_generator:
 
     path_wps = []
 
-    path_wps.append(start_pos)
+    
+    #path_wps.append(start_pos)
     
 
 
-    currentZ_counter = start_pos[0][2]
-    wp_counter = 0
+    currentZ_counter = doors[0][2]
+    wp_counter = 1
     isStairs = False
-    while currentZ_counter+8 <= doors[1][2]:
+    while currentZ_counter+4 < doors[1][2]:
 
       if isStairs == True:
-        currentZ_counter += random.randint(1,2)*4
+        currentZ_counter += 4
         wp_counter +=1
         isStairs = False
       elif isStairs == False:
@@ -200,9 +214,10 @@ class stairs_generator:
         isStairs = True
 
       path_wps.append(((xy_wps[wp_counter%4][0],xy_wps[wp_counter%4][1],currentZ_counter),(0,0,0),(0,0,0)))
-      
+      #print(((xy_wps[wp_counter%4][0],xy_wps[wp_counter%4][1],currentZ_counter),(0,0,0),(0,0,0)))  
+          
     path_wps.append(end_pos)
-
+    #print(end_pos)
 
     #path_wps = sorted(path_wps, key=lambda L: (L[0][2]))
     
@@ -211,9 +226,10 @@ class stairs_generator:
     for index in range(len(path_wps)-1):
       collected_journey += self.create_path(path_wps[index],path_wps[index+1], grid_size,in_limits_shapes,off_limits_shapes)
       
-
+    print("finished Collecting Journey")
     
     collected_journey.reverse()
+    print("reversed Path")
 
     pre_pos = collected_journey[0]
     rotation = 0
@@ -263,8 +279,10 @@ class stairs_generator:
     #current_pos = min(open, key=lambda L: L[1][2])
     allow_upper_pos = True
     
+    print("looking for path") 
     #while current_pos is not end_pos:
     while not (current_pos[0][0] == end[0][0] and current_pos[0][1] == end[0][1] and current_pos[0][2] == end[0][2]):
+      print(current_pos[0],"current ", end[0], "end ") 
       #print = current_pos[0] +end_pos[
       self.tile_handler.get_surrounding_pos(open, closed, current_pos, grid_size, start[0], end[0],in_bounds,off_bounds,allow_upper_pos) 
    
