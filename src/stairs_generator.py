@@ -68,9 +68,9 @@ class stairs_generator:
         elif door[0] <= (bounds[0][0][0] - x_length):
           rotation = 90
         elif door[1] >= (bounds[0][0][1] + y_length):
-          rotation = 180 
+          rotation = 0 
         elif door[1] <= (bounds[0][0][1] - y_length):
-          rotation = 0
+          rotation = 180
         
         nodes.append(("Floor_Door_Way_4x4x4",(door[0],door[1],door[2]),rotation))
         print(("Floor_Door_Way_4x4x4",(door[0],door[1],door[2]),rotation))
@@ -194,29 +194,37 @@ class stairs_generator:
               (shape[0][0][0]-x_length,shape[0][0][1]-y_length)]
 
     path_wps = []
+    doors = sorted(doors, key=lambda L: (L[2]))
 
-    
-    path_wps.append(start_pos)
-    
+    for index in range(len(doors)-1): 
+      path_wps.append((doors[index],(0,0,0),(0,0,0)))
 
+      currentZ_counter = doors[index][2]
+      wp_counter = 1
+      isStairs = False
+      while currentZ_counter+4 < doors[index+1][2]:
 
-    currentZ_counter = doors[0][2]
-    wp_counter = 1
-    isStairs = False
-    while currentZ_counter+4 < doors[1][2]:
-
-      if isStairs == True:
-        currentZ_counter += 4
-        wp_counter +=1
-        isStairs = False
-      elif isStairs == False:
-        wp_counter += 2
-        isStairs = True
+        if isStairs == True:
+          currentZ_counter += 4
+          wp_counter +=1
+          isStairs = False
+        elif isStairs == False:
+          wp_counter += 2
+          isStairs = True
 
       path_wps.append(((xy_wps[wp_counter%4][0],xy_wps[wp_counter%4][1],currentZ_counter),(0,0,0),(0,0,0)))
       #print(((xy_wps[wp_counter%4][0],xy_wps[wp_counter%4][1],currentZ_counter),(0,0,0),(0,0,0)))  
           
-    path_wps.append(end_pos)
+    path_wps.append((doors[len(doors)-1],(0,0,0),(0,0,0)))
+
+
+
+    
+    #path_wps.append(start_pos)
+    
+
+
+ 
     #print(end_pos)
 
     #path_wps = sorted(path_wps, key=lambda L: (L[0][2]))
