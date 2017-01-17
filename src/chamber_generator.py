@@ -7,7 +7,7 @@ infty = 9999
 
 def are_bottom_lvl( doors_list, chamber_min_z):
   for doors in doors_list:
-    if doors[2] == chamber_min_z:
+    if not doors[2] == chamber_min_z:
       return False
   return True
 
@@ -71,11 +71,11 @@ class chamber_generator:
 
     print_chamber_specs( *chamber_specs )
     print_doors_specs ( doors_specs )
-    
-    if are_bottom_lvl( doors_specs, chamber.position[0] ):
+    result = "empty"
+    if are_bottom_lvl( doors_specs, chamber.position[2] ):
       result = self.rg.create_room( doors_specs, chamber_specs )
-    elif len( doors_specs ) > 1:
-      result = self.sg.create_stairwell( doors_specs, chamber_specs )
+    #elif len( doors_specs ) > 1:
+    #  result = self.sg.create_stairwell( doors_specs, chamber_specs )
     
       ### Robs testing
     #doors = [(4,-16,0), (-4,20,8)]
