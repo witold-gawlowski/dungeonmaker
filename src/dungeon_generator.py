@@ -140,12 +140,15 @@ class dungeon_generator(object):
     chamber4 = Chamber()
     chamber5 = Chamber()
     chamber6 = Chamber()
+    chamber7 = Chamber()
+    chamber8 = Chamber()
 
     chamber1.position = (10, 10, 0)
     chamber1.size = (5, 4, 3)
     chamber1.doors = []
     chamber1.doors.append( ( 3, 3, 0) )
     chamber1.doors.append( ( 4, 1, 0) )
+    chamber1.doors.append( ( 0, 2, 0) )
 
     chamber2.position = (12, 14, 0)
     chamber2.size = (3, 3, 4)
@@ -177,6 +180,17 @@ class dungeon_generator(object):
     chamber6.doors = []
     chamber6.doors.append( ( 0, 1, 0 ) )
 
+    chamber7.position = (0, 5, 0)
+    chamber7.size = (10, 25, 6)
+    chamber7.doors = []
+    chamber7.doors.append( ( 2, 23, 0 ) )
+    chamber7.doors.append( ( 9, 7, 0 ) )
+
+    chamber8.position = (0, 30, 0)
+    chamber8.size = (5, 5, 7)
+    chamber8.doors = []
+    chamber8.doors.append( ( 2, 0, 0 ) )
+
     self.chambers = []
     self.chambers.append(chamber1)
     self.chambers.append(chamber2)
@@ -184,6 +198,8 @@ class dungeon_generator(object):
     self.chambers.append(chamber4)
     self.chambers.append(chamber5)
     self.chambers.append(chamber6)
+    self.chambers.append(chamber7)
+    self.chambers.append(chamber8)
     print (self.chambers)
 
   def generate_world_data2( self ):
