@@ -132,7 +132,61 @@ class dungeon_generator(object):
               self.chamber_connections.append( ( chamber, neighbour ) )
               self.chamber_connections.append( ( neighbour, chamber ) )
 
+
   def generate_world_data( self ):
+    chamber1 = Chamber()
+    chamber2 = Chamber()
+    chamber3 = Chamber()
+    chamber4 = Chamber()
+    chamber5 = Chamber()
+    chamber6 = Chamber()
+
+    chamber1.position = (10, 10, 0)
+    chamber1.size = (5, 4, 3)
+    chamber1.doors = []
+    chamber1.doors.append( ( 3, 3, 0) )
+    chamber1.doors.append( ( 4, 1, 0) )
+
+    chamber2.position = (12, 14, 0)
+    chamber2.size = (3, 3, 4)
+    chamber2.doors = []
+    chamber2.doors.append( ( 1, 0, 0 ) )
+    chamber2.doors.append( ( 2, 1, 0 ) )
+
+    chamber3.position = (15, 10, 0)
+    chamber3.size = (4, 7, 6)
+    chamber3.doors = []
+    chamber3.doors.append( ( 0, 1, 0 ) )
+    chamber3.doors.append( ( 0, 5, 0 ) )
+    chamber3.doors.append( ( 2, 6, 0 ) )
+
+    chamber4.position = (10, 17, 0)
+    chamber4.size = (9, 4, 8)
+    chamber4.doors = []
+    chamber4.doors.append( ( 1, 3, 0 ) )
+    chamber4.doors.append( ( 7, 0, 0 ) )
+    chamber4.doors.append( ( 8, 2, 0 ) )
+
+    chamber5.position = (10, 21, 0)
+    chamber5.size = (3, 4, 4)
+    chamber5.doors = []
+    chamber5.doors.append( ( 1, 0, 0 ) )
+
+    chamber6.position = (19, 18, 0)
+    chamber6.size = (4, 7, 6)
+    chamber6.doors = []
+    chamber6.doors.append( ( 0, 1, 0 ) )
+
+    self.chambers = []
+    self.chambers.append(chamber1)
+    self.chambers.append(chamber2)
+    self.chambers.append(chamber3)
+    self.chambers.append(chamber4)
+    self.chambers.append(chamber5)
+    self.chambers.append(chamber6)
+    print (self.chambers)
+
+  def generate_world_data2( self ):
     for i in range( room_attempts ):
       candidate = random_chamber( True if random.random() < room_chance else False )
       if ( self.collides ( candidate ) ):
