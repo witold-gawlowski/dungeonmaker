@@ -196,7 +196,7 @@ class stairs_generator:
     path_wps = []
 
     
-    #path_wps.append(start_pos)
+    path_wps.append(start_pos)
     
 
 
