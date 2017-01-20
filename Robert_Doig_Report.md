@@ -1,8 +1,12 @@
 # Dungeon Maker
 
 ### Team 
-Name: string team_name; 
+Name: 
+
+         string team_name;
+         
 Members: 
+         
          Witek Gawlowski
          Louis Bennette
          Robert Doig 
