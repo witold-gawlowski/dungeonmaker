@@ -1,5 +1,12 @@
 # Dungeon Maker
 
+### Team 
+Name: string team_name; 
+Members: 
+         Witek Gawlowski
+         Louis Bennette
+         Robert Doig 
+
 ##Aims 
 To create a procedurally generated level using a dungeon tool kit.
 
@@ -21,7 +28,7 @@ The tasks were divided up as follows:
   - Witek to handle the artist input and overview of the level 
   - Louis to create rooms with interesting pillars and features 
   - Robert to implement the stairwells generator to connect doors on multiple levels. 
-  - Henry to create a web interface and run the tool on a server for users to control
+
 
 ## Stairs Overview 
 
