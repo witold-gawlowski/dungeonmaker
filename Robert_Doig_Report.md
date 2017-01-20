@@ -14,7 +14,7 @@ This project focuses on the level that we had imagined creating. At the beginnin
 When we had the idea of what we wanted the project to output we divided up the tasks into three main areas, stairs, rooms and artist input or world generation. After this was defined a project flow diagram and basic structure was created. Essentially we would handle a part of the process and pass the output on to the next person in the chain.
 
 This diagram shows the basic structure of how the data passed through the system 
-![Flow Diagram](screenshots/FlowDiagram.png)
+![Flow Diagram](screenshots/FlowDiagram.PNG)
 
 
 The tasks were divided up as follows: 
@@ -41,7 +41,7 @@ After the next tile is chosen it repeats the step until it reacts the destinatio
 The way that the algorithm was changed was to include checking of one higher tiles then the current tile. This I have represented in the image below.  
 
 Get Surrounding Tiles
-![Surrounding Tile diagram](screenshots/getSurroundingTiles.png)
+![Surrounding Tile diagram](screenshots/getSurroundingTiles.PNG)
 The yellow cube is the current tile and the red and the surround tiles. 
 
 ## Components File 
